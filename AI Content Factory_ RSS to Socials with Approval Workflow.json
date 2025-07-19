@@ -1,0 +1,821 @@
+{
+  "name": "AI Content Factory: RSS to Socials with Approval Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "assistant",
+        "assistantId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "asst_I1hJm1vF2t7d0PBJTm5rV8wX",
+          "cachedResultName": "Facebook post generator"
+        },
+        "prompt": "define",
+        "text": "=Article: {{ $('RSS Trigger').item.json['content:encodedSnippet'] }}\nSummary: {{ $('Generate AI-Powered Summary').item.json.output }}",
+        "options": {}
+      },
+      "id": "08bb4e66-ef03-4474-9965-8c96555ee484",
+      "name": "Create Facebook Post",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        -140,
+        760
+      ],
+      "typeVersion": 1.8,
+      "credentials": {
+        "openAiApi": {
+          "id": "IleT53idqzgq2A7w",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "ebc0b0de-b436-4a41-aeac-d0873d148a55",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.query.answer }}",
+              "rightValue": "=go"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a005f01e-a54b-4cad-91e0-c1c7df129fb5",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        880,
+        760
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "postAs": "organization",
+        "organization": "18234190",
+        "text": "={{ $('Create LinkedIn Post').item.json.output }}\n\nRead More : {{ $('NocoDB Databse').item.json.URL }}\n\n{{ $('NocoDB Databse').item.json['Post Image URL'] }}",
+        "shareMediaCategory": "IMAGE",
+        "additionalFields": {}
+      },
+      "id": "e49d509d-ccfe-4d19-bb70-07fc4ad134dc",
+      "name": "LinkedIn",
+      "type": "n8n-nodes-base.linkedIn",
+      "position": [
+        2280,
+        920
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "resource": "assistant",
+        "assistantId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "asst_uaAQvNZU70LbH1Xt4tNsQySd",
+          "cachedResultName": "LinkedIn Post generator"
+        },
+        "prompt": "define",
+        "text": "=Article: {{ $('RSS Trigger').item.json['content:encodedSnippet'] }}\n\nSummary: {{ $('Generate AI-Powered Summary').item.json.output }}\n\n",
+        "options": {}
+      },
+      "id": "b6c5df33-5f0e-4abf-b118-f69fe4762fca",
+      "name": "Create LinkedIn Post",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        1560,
+        920
+      ],
+      "typeVersion": 1.8,
+      "credentials": {
+        "openAiApi": {
+          "id": "IleT53idqzgq2A7w",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst updatedItems = items.map((item) => {\n  const content = item?.json[\"content:encoded\"];\n  const imageLink = content.match(/<featured-image>(.*?)<\\/featured-image>/)[1];\n  item.json[\"featured-image\"] = imageLink;\n  item.json[\"content:encoded\"] = content.replace(\n    /<featured-image>(.*?)<\\/featured-image>/,\n    \"\",\n  );\n  return item;\n});\nreturn updatedItems;\n"
+      },
+      "id": "29cfcb44-d0a2-40d0-b359-862e6ec85ec7",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        80,
+        520
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "text": "= {{ $('NocoDB Databse').item.json['Article Summary'] }}  {{ $('NocoDB Databse').item.json.URL }}",
+        "additionalFields": {}
+      },
+      "id": "0b0d3600-b16b-41b7-a468-2cc621bfc5da",
+      "name": "X1",
+      "type": "n8n-nodes-base.twitter",
+      "position": [
+        2400,
+        1080
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v22.0",
+        "node": "me",
+        "edge": "Photos",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "message",
+                "value": "={{ $('NocoDB Databse').item.json.Post }} \n\nRead More : {{ $('NocoDB Databse').item.json.URL }}"
+              },
+              {
+                "name": "url",
+                "value": "={{ $('NocoDB Databse').item.json['Post Image URL'] }}  "
+              }
+            ]
+          }
+        }
+      },
+      "id": "1662b813-fa3e-4840-9d58-040b854c898b",
+      "name": "Facebook Graph API",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "position": [
+        1640,
+        740
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "options": {}
+      },
+      "id": "9b64f3c8-573f-42b1-b579-06e7cdf69d9a",
+      "name": "Wait1",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        1920,
+        1160
+      ],
+      "webhookId": "3eee8286-adf4-4a14-8c63-bbc9b5c2ee4e",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "a1109e1a-9acf-4ef0-bd1f-5011e31ae901",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.query.answer }}",
+              "rightValue": "go"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "da699c8f-f58c-4931-89c2-a6a0a708113a",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        2160,
+        1160
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "text": "={{ $('NocoDB Databse').item.json['Article Summary'] }}",
+        "additionalFields": {}
+      },
+      "id": "a4e6a463-837c-4b47-b7c3-5db32baab952",
+      "name": "X",
+      "type": "n8n-nodes-base.twitter",
+      "position": [
+        2400,
+        1260
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.link }}",
+        "options": {}
+      },
+      "id": "bc20e686-6e4b-40b0-9188-5506a1f8f6b0",
+      "name": "Extract Link Seprately",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        280,
+        520
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "prompt": "={{ $json.output }}",
+        "options": {
+          "returnImageUrls": true
+        }
+      },
+      "id": "5dd1c49c-0022-4b65-af77-82bcb4bed8c3",
+      "name": "Generate Image",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        1280,
+        520
+      ],
+      "typeVersion": 1.8,
+      "credentials": {
+        "openAiApi": {
+          "id": "IleT53idqzgq2A7w",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "nocoDbApiToken",
+        "operation": "create",
+        "workspaceId": "w7f5zx5l",
+        "projectId": "pon9l140lnoadsz",
+        "table": "mdxddablsn84huy",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldName": "URL",
+              "fieldValue": "={{ $('RSS Trigger').item.json.link }}"
+            },
+            {
+              "fieldName": "Article Summary",
+              "fieldValue": "={{ $('Generate AI-Powered Summary').item.json.output }}"
+            },
+            {
+              "fieldName": "Platform",
+              "fieldValue": "Facebook"
+            },
+            {
+              "fieldName": "Post",
+              "fieldValue": "={{ $json.output }}"
+            },
+            {
+              "fieldName": "Image Prompt",
+              "fieldValue": "={{ $('Create Custom Post Visual prompt').item.json.output }}"
+            },
+            {
+              "fieldName": "Image URL",
+              "fieldValue": "={{ $('Generate Image').item.json.url }}"
+            },
+            {
+              "fieldName": "Post Image URL",
+              "fieldValue": "={{ $('Code').item.json['featured-image'] }}"
+            }
+          ]
+        }
+      },
+      "id": "d8970cc5-8101-4e77-9566-38b9c460adcf",
+      "name": "NocoDB Databse",
+      "type": "n8n-nodes-base.nocoDb",
+      "position": [
+        220,
+        760
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "chatId": "=-4650022285",
+        "text": "=FB Post:  {{ $('Create Facebook Post').item.json.output }}\n\nArticle Summary: {{ $('Generate AI-Powered Summary').item.json.output }}\n\nOriginal URL: {{ $json.URL }}\n\nImage: {{ $json['Post Image URL'] }}\n\nNocode db link that can be used to edit the post: https://app.nocodb.com/#/w7f5zx5l/pon9l140lnoadsz/mdxddablsn84huy/facebook?rowId={{ $json.Id }}\n\nPlease Tap [Go]({{$execution.resumeUrl}}?answer=go) or [No]({{$execution.resumeUrl}}?answer=no)",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Go",
+                    "additionalFields": {
+                      "url": "https://abc.app.n8n.cloud/webhook/16a45e88-270f-411b-91b3-cd9bbd53274e?answer=go\n"
+                    }
+                  },
+                  {
+                    "text": "No",
+                    "additionalFields": {
+                      "url": "https://abc.app.n8n.cloud/webhook/16a45e88-270f-411b-91b3-cd9bbd53274e?answer=no"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": true
+        }
+      },
+      "id": "c4f7a0c6-9db5-4d61-a7d9-071519a7eb4d",
+      "name": "Send Message",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        440,
+        760
+      ],
+      "webhookId": "609c6d0f-88ac-48b8-a2ec-3d4e4e7f3224",
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "VjILwDUOIjgw8Iul",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "responseMode": "responseNode",
+        "limitWaitTime": true,
+        "options": {}
+      },
+      "id": "5215e4be-2bc0-41f9-ae46-cfa4a30bc82d",
+      "name": "wait for response",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        660,
+        760
+      ],
+      "webhookId": "357fe419-78b6-441f-8730-46d21db8a561",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 20,
+              "unit": "minutes"
+            }
+          ]
+        },
+        "feedUrl": "https://www.abc.com/press-releases/feed/"
+      },
+      "id": "e68e55d9-62aa-4c2a-a2f5-ac5e34499476",
+      "name": "RSS Trigger",
+      "type": "n8n-nodes-base.rssFeedReadTrigger",
+      "position": [
+        -100,
+        520
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "authentication": "nocoDbApiToken",
+        "operation": "update",
+        "workspaceId": "w7f5zx5l",
+        "projectId": "pon9l140lnoadsz",
+        "table": "mdxddablsn84huy",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldName": "Status",
+              "fieldValue": "Approved"
+            },
+            {
+              "fieldName": "Id",
+              "fieldValue": "={{ $('NocoDB Databse').item.json.Id }}"
+            }
+          ]
+        }
+      },
+      "id": "53075100-aa61-4499-bd24-0158d4f6ab96",
+      "name": "Database Update to Yes",
+      "type": "n8n-nodes-base.nocoDb",
+      "position": [
+        1100,
+        740
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "authentication": "nocoDbApiToken",
+        "operation": "update",
+        "workspaceId": "w7f5zx5l",
+        "projectId": "pon9l140lnoadsz",
+        "table": "mdxddablsn84huy",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldName": "Status",
+              "fieldValue": "Declined"
+            }
+          ]
+        }
+      },
+      "id": "6e717630-4c24-4d7f-b78d-df97b187cace",
+      "name": "Database Update to No",
+      "type": "n8n-nodes-base.nocoDb",
+      "position": [
+        1100,
+        920
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "chatId": "-4650022285",
+        "text": "=How would you like to post on Twitter?\nGo for With Link\nNo for Without Link\n\n\n\nPlease Tap [Go]({{$execution.resumeUrl}}?answer=go) or [No]({{$execution.resumeUrl}}?answer=no)",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Go",
+                    "additionalFields": {
+                      "url": "https://abc.app.n8n.cloud/webhook/16a45e88-270f-411b-91b3-cd9bbd53274e?answer=go"
+                    }
+                  },
+                  {
+                    "text": "No",
+                    "additionalFields": {
+                      "url": "https://abc.app.n8n.cloud/webhook/16a45e88-270f-411b-91b3-cd9bbd53274e?answer=no"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {}
+      },
+      "id": "d61b22e0-3027-4dd9-908f-68913ecd1244",
+      "name": "message for twitter",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        1660,
+        1160
+      ],
+      "webhookId": "f0b1c151-e89a-4a4a-843c-8cc121f7593a",
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "VjILwDUOIjgw8Iul",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('NocoDB Databse').item.json['Post Image URL'] }}",
+        "options": {}
+      },
+      "id": "e636c02b-4b8b-45d3-937f-f74d6df1011d",
+      "name": "Image url extracter",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1960,
+        920
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "resource": "assistant",
+        "assistantId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "asst_A5r332Sc7J9rj1t3Siw6ZSDN",
+          "cachedResultName": "Article summariser"
+        },
+        "prompt": "define",
+        "text": "=Full article:  {{ $('RSS Trigger').item.json['content:encodedSnippet'] }}",
+        "options": {}
+      },
+      "id": "c58ee037-10d4-47ea-8f73-efae708d0cab",
+      "name": "Generate AI-Powered Summary",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        540,
+        520
+      ],
+      "typeVersion": 1.8,
+      "credentials": {
+        "openAiApi": {
+          "id": "IleT53idqzgq2A7w",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "assistant",
+        "assistantId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "asst_Y6InUEVT5JDUeWb6AuA1JKof",
+          "cachedResultName": "Create Image Prompt"
+        },
+        "prompt": "define",
+        "text": "=Full article:  {{ $('RSS Trigger').item.json['content:encodedSnippet'] }} Article Summary: {{ $json.output }}",
+        "options": {}
+      },
+      "id": "6ede9026-1aba-4e0a-a6ea-5efdebca1157",
+      "name": "Create Custom Post Visual prompt",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        900,
+        520
+      ],
+      "typeVersion": 1.8,
+      "credentials": {
+        "openAiApi": {
+          "id": "IleT53idqzgq2A7w",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "RSS Trigger": [
+      {
+        "json": {
+          "guid": "https://www.abc.com/?p=54429",
+          "link": "https://www.abc.com/press-releas",
+          "title": "Ofro, Kelithee & Santhosh Narayanan Unite for Spiritual Tamil Hip-Hop Track ‘Vetrivel’",
+          "itunes": {},
+          "content": "<featured-image></featured-image><p>Renowned Tamil hip-hop producer Ofro collaborates with rising Gen Z rap talent Kelithee and celebrated music composer Santhosh Narayanan for “Vetrivel” — a bold, spiritually charged Tamil hip-hop track that blends divine devotion with street energy and cultural pride. Rooted in a deep reverence for Lord Murugan, “Vetrivel” is a sonic experience that fuses thunderous [&#8230;]</p>\n<p>The post <a rel=\"nofollow\" href=\"https://www.abc.com/press-releases/ofro-kelithee-santhosh-narayanan-unite-for-spiritual-tamil-hip-hop-track-vetrivel/\">Ofro, Kelithee &#038; Santhosh Narayanan Unite for Spiritual Tamil Hip-Hop Track ‘Vetrivel’</a> appeared first on <a rel=\"nofollow\" href=\"https://www.abc.com\">abc</a>.</p>\n",
+          "creator": "Jackey Chain",
+          "isoDate": "2025-06-05T09:16:18.000Z",
+          "pubDate": "Thu, 05 Jun 2025 09:16:18 +0000",
+          "categories": [
+            "Press releases",
+            "Artist",
+            "News",
+            "Singer"
+          ],
+          "dc:creator": "Anchal Ojha",
+          "contentSnippet": "https://www.abc.com/wp-content/uploads/2025/06/Vetrivel.webp\nRenowned Tamil hip-hop producer Ofro collaborates with rising Gen Z rap talent Kelithee and celebrated music composer Santhosh Narayanan for “Vetrivel” — a bold, spiritually charged Tamil hip-hop track that blends divine devotion with street energy and cultural pride. Rooted in a deep reverence for Lord Murugan, “Vetrivel” is a sonic experience that fuses thunderous […]\nThe post Ofro, Kelithee & Santhosh Narayanan Unite for Spiritual Tamil Hip-Hop Track ‘Vetrivel’ appeared first on abc.",
+          "content:encoded": "<featured-image></featured-image>\n<p>Renowned Tamil hip-hop producer <strong>Ofro</strong> collaborates with rising Gen Z rap talent <strong>Kelithee</strong> and celebrated music composer <strong>Santhosh Narayanan</strong> for <em>“Vetrivel”</em> — a bold, spiritually charged Tamil hip-hop track that blends divine devotion with street energy and cultural pride.</p>\n\n\n\n<p>Rooted in a deep reverence for <strong>Lord Murugan</strong>, <em>“Vetrivel”</em> is a sonic experience that fuses thunderous hip-hop beats with folk-inspired instrumentation, channeling both raw grit and spiritual power. The track delivers a rallying cry born from the heart of Tamil soil — uniting genre-defying sounds with deeply personal storytelling.</p>\n\n\n\n<script async src=\"https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5815882061711286\"\n     crossorigin=\"anonymous\"></script>\n<ins class=\"adsbygoogle\"\n     style=\"display:block\"\n     data-ad-format=\"autorelaxed\"\n     data-ad-client=\"ca-pub-5815882061711286\"\n     data-ad-slot=\"4238026668\"></ins>\n<script>\n     (adsbygoogle = window.adsbygoogle || []).push({});\n</script>\n\n\n\n<p><strong>Ofro</strong>, a pioneer in the Tamil hip-hop movement, brings his signature global fusion style to the production. He shares, “<em>‘Vetrivel’ is a message of hope and faith. Throughout the process — from writing to release — there was a powerful divine energy guiding us. This song, for me, is truly part of God’s plan.</em>”</p>\n\n\n\n<p>Adding a generational voice to the track is <strong>Kelithee</strong>, who began his lyrical journey under Ofro’s mentorship at just 15. His raw, emotional verses reflect a personal and spiritual bond with Murugan. “<em>‘Vetrivel’ is my devotional offering. Murugan is more than a deity — He’s my friend,</em>” says Kelithee.</p>\n\n\n\n<script async src=\"https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5815882061711286\"\n     crossorigin=\"anonymous\"></script><ins class=\"adsbygoogle\"\n     style=\"display:block\"\n     data-ad-format=\"fluid\"\n     data-ad-layout-key=\"-ga-2w+v-a0+sx\"\n     data-ad-client=\"ca-pub-5815882061711286\"\n     data-ad-slot=\"3164618146\"></ins><script>\n     (adsbygoogle = window.adsbygoogle || []).push({});</script>\n\n\n\n<p>Elevating the sonic depth of the project, acclaimed composer <strong>Santhosh Narayanan</strong> infuses his trademark textured soundscapes, tying together the track’s spiritual and urban themes into a seamless, genre-blending production.</p>\n\n\n\n<p>More than just a song, <em>“Vetrivel”</em> is an anthem for believers, hip-hop fans, and culture seekers alike — a powerful fusion of <strong>faith, rhythm, and identity</strong>.</p>\n<div class='heateor_sss_sharing_container heateor_sss_vertical_sharing heateor_sss_bottom_sharing' style='width:44px;right: -10px;top: 100px;-webkit-box-shadow:none;box-shadow:none;' data-heateor-sss-href='https://www.abc.com/press-releases/feed/'><div class=\"heateor_sss_sharing_ul\"><a aria-label=\"Facebook\" class=\"heateor_sss_facebook\" href=\"https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fwww.abc.com%2Fpress-releases%2Ffeed%2F\" title=\"Facebook\" rel=\"nofollow noopener\" target=\"_blank\" style=\"font-size:32px!important;box-shadow:none;display:inline-block;vertical-align:middle\"><span class=\"heateor_sss_svg\" style=\"background-color:#0765FE;width:40px;height:40px;border-radius:999px;display:inline-block;opacity:1;float:left;font-size:32px;box-shadow:none;display:inline-block;font-size:16px;padding:0 4px;vertical-align:middle;background-repeat:repeat;overflow:hidden;padding:0;cursor:pointer;box-sizing:content-box\"><svg style=\"display:block;border-radius:999px;\" focusable=\"false\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" width=\"100%\" height=\"100%\" viewBox=\"0 0 32 32\"><path fill=\"#fff\" d=\"M28 16c0-6.627-5.373-12-12-12S4 9.373 4 16c0 5.628 3.875 10.35 9.101 11.647v-7.98h-2.474V16H13.1v-1.58c0-4.085 1.849-5.978 5.859-5.978.76 0 2.072.15 2.608.298v3.325c-.283-.03-.775-.045-1.386-.045-1.967 0-2.728.745-2.728 2.683V16h3.92l-.673 3.667h-3.247v8.245C23.395 27.195 28 22.135 28 16Z\"></path></svg></span></a><a aria-label=\"X\" class=\"heateor_sss_button_x\" href=\"https://twitter.com/intent/tweet?text=Press%20releases&url=https%3A%2F%2Fwww.abc.com%2Fpress-releases%2Ffeed%2F\" title=\"X\" rel=\"nofollow noopener\" target=\"_blank\" style=\"font-size:32px!important;box-shadow:none;display:inline-block;vertical-align:middle\"><span class=\"heateor_sss_svg heateor_sss_s__default heateor_sss_s_x\" style=\"background-color:#2a2a2a;width:40px;height:40px;border-radius:999px;display:inline-block;opacity:1;float:left;font-size:32px;box-shadow:none;display:inline-block;font-size:16px;padding:0 4px;vertical-align:middle;background-repeat:repeat;overflow:hidden;padding:0;cursor:pointer;box-sizing:content-box\"><svg width=\"100%\" height=\"100%\" style=\"display:block;border-radius:999px;\" focusable=\"false\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\"><path fill=\"#fff\" d=\"M21.751 7h3.067l-6.7 7.658L26 25.078h-6.172l-4.833-6.32-5.531 6.32h-3.07l7.167-8.19L6 7h6.328l4.37 5.777L21.75 7Zm-1.076 16.242h1.7L11.404 8.74H9.58l11.094 14.503Z\"></path></svg></span></a><a aria-label=\"Linkedin\" class=\"heateor_sss_button_linkedin\" href=\"https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fwww.abc.com%2Fpress-releases%2Ffeed%2F\" title=\"Linkedin\" rel=\"nofollow noopener\" target=\"_blank\" style=\"font-size:32px!important;box-shadow:none;display:inline-block;vertical-align:middle\"><span class=\"heateor_sss_svg heateor_sss_s__default heateor_sss_s_linkedin\" style=\"background-color:#0077b5;width:40px;height:40px;border-radius:999px;display:inline-block;opacity:1;float:left;font-size:32px;box-shadow:none;display:inline-block;font-size:16px;padding:0 4px;vertical-align:middle;background-repeat:repeat;overflow:hidden;padding:0;cursor:pointer;box-sizing:content-box\"><svg style=\"display:block;border-radius:999px;\" focusable=\"false\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" width=\"100%\" height=\"100%\" viewBox=\"0 0 32 32\"><path d=\"M6.227 12.61h4.19v13.48h-4.19V12.61zm2.095-6.7a2.43 2.43 0 0 1 0 4.86c-1.344 0-2.428-1.09-2.428-2.43s1.084-2.43 2.428-2.43m4.72 6.7h4.02v1.84h.058c.56-1.058 1.927-2.176 3.965-2.176 4.238 0 5.02 2.792 5.02 6.42v7.395h-4.183v-6.56c0-1.564-.03-3.574-2.178-3.574-2.18 0-2.514 1.7-2.514 3.46v6.668h-4.187V12.61z\" fill=\"#fff\"></path></svg></span></a><a aria-label=\"Pinterest\" class=\"heateor_sss_button_pinterest\" href=\"https://www.abc.com/press-releases/feed/\" onclick=\"event.preventDefault();javascript:void( (function() {var e=document.createElement('script' );e.setAttribute('type','text/javascript' );e.setAttribute('charset','UTF-8' );e.setAttribute('src','//assets.pinterest.com/js/pinmarklet.js?r='+Math.random()*99999999);document.body.appendChild(e)})());\" title=\"Pinterest\" rel=\"noopener\" style=\"font-size:32px!important;box-shadow:none;display:inline-block;vertical-align:middle\"><span class=\"heateor_sss_svg heateor_sss_s__default heateor_sss_s_pinterest\" style=\"background-color:#cc2329;width:40px;height:40px;border-radius:999px;display:inline-block;opacity:1;float:left;font-size:32px;box-shadow:none;display:inline-block;font-size:16px;padding:0 4px;vertical-align:middle;background-repeat:repeat;overflow:hidden;padding:0;cursor:pointer;box-sizing:content-box\"><svg style=\"display:block;border-radius:999px;\" focusable=\"false\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" width=\"100%\" height=\"100%\" viewBox=\"-2 -2 35 35\"><path fill=\"#fff\" d=\"M16.539 4.5c-6.277 0-9.442 4.5-9.442 8.253 0 2.272.86 4.293 2.705 5.046.303.125.574.005.662-.33.061-.231.205-.816.27-1.06.088-.331.053-.447-.191-.736-.532-.627-.873-1.439-.873-2.591 0-3.338 2.498-6.327 6.505-6.327 3.548 0 5.497 2.168 5.497 5.062 0 3.81-1.686 7.025-4.188 7.025-1.382 0-2.416-1.142-2.085-2.545.397-1.674 1.166-3.48 1.166-4.689 0-1.081-.581-1.983-1.782-1.983-1.413 0-2.548 1.462-2.548 3.419 0 1.247.421 2.091.421 2.091l-1.699 7.199c-.505 2.137-.076 4.755-.039 5.019.021.158.223.196.314.077.13-.17 1.813-2.247 2.384-4.324.162-.587.929-3.631.929-3.631.46.876 1.801 1.646 3.227 1.646 4.247 0 7.128-3.871 7.128-9.053.003-3.918-3.317-7.568-8.361-7.568z\"/></svg></span></a><a aria-label=\"Whatsapp\" class=\"heateor_sss_whatsapp\" href=\"https://api.whatsapp.com/send?text=Press%20releases%20https%3A%2F%2Fwww.abc.com%2Fpress-releases%2Ffeed%2F\" title=\"Whatsapp\" rel=\"nofollow noopener\" target=\"_blank\" style=\"font-size:32px!important;box-shadow:none;display:inline-block;vertical-align:middle\"><span class=\"heateor_sss_svg\" style=\"background-color:#55eb4c;width:40px;height:40px;border-radius:999px;display:inline-block;opacity:1;float:left;font-size:32px;box-shadow:none;display:inline-block;font-size:16px;padding:0 4px;vertical-align:middle;background-repeat:repeat;overflow:hidden;padding:0;cursor:pointer;box-sizing:content-box\"><svg style=\"display:block;border-radius:999px;\" focusable=\"false\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" width=\"100%\" height=\"100%\" viewBox=\"-6 -5 40 40\"><path class=\"heateor_sss_svg_stroke heateor_sss_no_fill\" stroke=\"#fff\" stroke-width=\"2\" fill=\"none\" d=\"M 11.579798566743314 24.396926207859085 A 10 10 0 1 0 6.808479557110079 20.73576436351046\"></path><path d=\"M 7 19 l -1 6 l 6 -1\" class=\"heateor_sss_no_fill heateor_sss_svg_stroke\" stroke=\"#fff\" stroke-width=\"2\" fill=\"none\"></path><path d=\"M 10 10 q -1 8 8 11 c 5 -1 0 -6 -1 -3 q -4 -3 -5 -5 c 4 -2 -1 -5 -1 -4\" fill=\"#fff\"></path></svg></span></a></div><div class=\"heateorSssClear\"></div></div><p>The post <a rel=\"nofollow\" href=\"https://www.abc.com/press-releases/ofro-kelithee-santhosh-narayanan-unite-for-spiritual-tamil-hip-hop-track-vetrivel/\">Ofro, Kelithee &#038; Santhosh Narayanan Unite for Spiritual Tamil Hip-Hop Track ‘Vetrivel’</a> appeared first on <a rel=\"nofollow\" href=\"https://www.abc.com\">abc</a>.</p>\n",
+          "content:encodedSnippet": "https://www.abc.com/wp-content/uploads/2025/06/Vetrivel.webp\nRenowned Tamil hip-hop producer Ofro collaborates with rising Gen Z rap talent Kelithee and celebrated music composer Santhosh Narayanan for “Vetrivel” — a bold, spiritually charged Tamil hip-hop track that blends divine devotion with street energy and cultural pride.\nRooted in a deep reverence for Lord Murugan, “Vetrivel” is a sonic experience that fuses thunderous hip-hop beats with folk-inspired instrumentation, channeling both raw grit and spiritual power. The track delivers a rallying cry born from the heart of Tamil soil — uniting genre-defying sounds with deeply personal storytelling.\n\n\n\n     (adsbygoogle = window.adsbygoogle || []).push({});\n\n\n\n\nOfro, a pioneer in the Tamil hip-hop movement, brings his signature global fusion style to the production. He shares, “‘Vetrivel’ is a message of hope and faith. Throughout the process — from writing to release — there was a powerful divine energy guiding us. This song, for me, is truly part of God’s plan.”\nAdding a generational voice to the track is Kelithee, who began his lyrical journey under Ofro’s mentorship at just 15. His raw, emotional verses reflect a personal and spiritual bond with Murugan. “‘Vetrivel’ is my devotional offering. Murugan is more than a deity — He’s my friend,” says Kelithee.\n\n     (adsbygoogle = window.adsbygoogle || []).push({});\n\n\n\nElevating the sonic depth of the project, acclaimed composer Santhosh Narayanan infuses his trademark textured soundscapes, tying together the track’s spiritual and urban themes into a seamless, genre-blending production.\nMore than just a song, “Vetrivel” is an anthem for believers, hip-hop fans, and culture seekers alike — a powerful fusion of faith, rhythm, and identity.\n\n\n\n\n\n\n\n\n\n\nThe post Ofro, Kelithee & Santhosh Narayanan Unite for Spiritual Tamil Hip-Hop Track ‘Vetrivel’ appeared first on abc."
+        }
+      }
+    ]
+  },
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Database Update to Yes",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Database Update to No",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "X1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "X",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Extract Link Seprately",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Message": {
+      "main": [
+        [
+          {
+            "node": "wait for response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Image": {
+      "main": [
+        [
+          {
+            "node": "Create Facebook Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NocoDB Databse": {
+      "main": [
+        [
+          {
+            "node": "Send Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "wait for response": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image url extracter": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "message for twitter": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Facebook Post": {
+      "main": [
+        [
+          {
+            "node": "NocoDB Databse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create LinkedIn Post": {
+      "main": [
+        [
+          {
+            "node": "Image url extracter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Database Update to Yes": {
+      "main": [
+        [
+          {
+            "node": "message for twitter",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Facebook Graph API",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create LinkedIn Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Link Seprately": {
+      "main": [
+        [
+          {
+            "node": "Generate AI-Powered Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate AI-Powered Summary": {
+      "main": [
+        [
+          {
+            "node": "Create Custom Post Visual prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Custom Post Visual prompt": {
+      "main": [
+        [
+          {
+            "node": "Generate Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e8ac245b-bba1-4dce-9824-88e5ee032e2a",
+  "meta": {
+    "instanceId": "16ed17c9c2a3c2f2456fa33a1606b954271b5e6a768b8b2e1c807a5bb7e13121"
+  },
+  "id": "UPS3Wt7E35sBl4vn",
+  "tags": []
+}
