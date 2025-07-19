@@ -1,0 +1,596 @@
+{
+  "name": "AI-Powered Gmail Classifier with Dynamic Label Creation",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "1ab09029-11be-4226-82f3-d80227a737e7",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        740,
+        380
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {},
+      "id": "b73d00db-0c1e-4d58-bb02-774c362559bd",
+      "name": "Replace Me",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        3140,
+        380
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "2f466934-e257-4315-8a7f-5e3dde987430",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.labelIds[2] }}",
+              "rightValue": "={{ $json.labelIds[2] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7b2b1f20-3e5a-456d-845b-35c19f739d8c",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1180,
+        400
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {},
+      "id": "5d2a08b0-6090-4328-8e6e-51b4b527e6f7",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        1320,
+        280
+      ],
+      "typeVersion": 3.1
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 20,
+        "simple": false,
+        "filters": {
+          "readStatus": "both"
+        },
+        "options": {}
+      },
+      "id": "69786789-5aad-4c13-bffb-fb26896645cd",
+      "name": "Gmail - Get All Messages",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        300,
+        380
+      ],
+      "webhookId": "a501a86b-b2df-45ec-b0d9-178765859a0f",
+      "typeVersion": 2.1,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zRlr7qlN5D6A6VHZ",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}",
+        "simple": false,
+        "options": {}
+      },
+      "id": "7f600971-91df-4479-90fa-c5d69e228ac8",
+      "name": "Gmail - Single Message",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        960,
+        400
+      ],
+      "webhookId": "ebc7d7c4-aece-4cd4-a46f-dff18891931e",
+      "typeVersion": 2.1,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zRlr7qlN5D6A6VHZ",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 2
+            }
+          ]
+        }
+      },
+      "id": "fca1e6f9-2173-4aaa-9cf3-8944d8ab7810",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        100,
+        380
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2e246278-eccb-4cd5-8c93-7daa824066e3",
+              "name": "id",
+              "type": "string",
+              "value": "={{ $json.id }}"
+            },
+            {
+              "id": "06e5dde5-dfce-4d4d-859d-b364301cb5aa",
+              "name": "from",
+              "type": "string",
+              "value": "={{ $json.headers.from }}"
+            },
+            {
+              "id": "e10231b9-fbb1-447a-a3fc-3ba8e5a9d314",
+              "name": "headers.subject",
+              "type": "string",
+              "value": "={{ $json.headers.subject }}"
+            },
+            {
+              "id": "6a472d41-0f6e-4803-8d94-4b4f8272e66c",
+              "name": "text",
+              "type": "string",
+              "value": "={{ $json.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b6c6ff37-e382-4709-8685-db19e4c36968",
+      "name": "Extract Email Data",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1520,
+        280
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2494d69d-3e5e-42ba-88d2-b76ca1962881",
+              "name": "output",
+              "type": "string",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "07b9f227-ff0f-4a04-9d6c-329522b29978",
+      "name": "Store AI Category",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2060,
+        280
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "resource": "label",
+        "returnAll": true
+      },
+      "id": "92ddd5e0-89a5-4ffc-92a0-991871a37f1b",
+      "name": "List All Gmail Labels",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        2260,
+        380
+      ],
+      "webhookId": "5c3cbc0b-9239-4a17-a8ec-bc8819341e47",
+      "typeVersion": 2.1,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zRlr7qlN5D6A6VHZ",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "output",
+              "field2": "name"
+            }
+          ]
+        },
+        "fuzzyCompare": true,
+        "options": {
+          "multipleMatches": "first"
+        }
+      },
+      "id": "45bd9e44-dde9-42df-a40e-a0792507710f",
+      "name": "Check if Label Exists",
+      "type": "n8n-nodes-base.compareDatasets",
+      "position": [
+        2480,
+        280
+      ],
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Extract Email Data').item.json.id }}",
+        "labelIds": "={{ $json.different.id.inputB }}"
+      },
+      "id": "573ba7c7-fa37-456a-8d8b-fafc32ee9b1d",
+      "name": "Apply Label to Email",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        2740,
+        380
+      ],
+      "webhookId": "4a35699e-da45-48e9-8e12-d22b2dcca62e",
+      "typeVersion": 2.1,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zRlr7qlN5D6A6VHZ",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "label",
+        "operation": "create",
+        "name": "={{ $('Store AI Category').item.json.output }}",
+        "options": {}
+      },
+      "id": "12e5bd6c-4562-4141-91f6-9f7757bf14d9",
+      "name": "Apply New Label",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        2740,
+        220
+      ],
+      "webhookId": "a6722fdc-15cb-4796-b82d-53cc23060640",
+      "typeVersion": 2.1,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zRlr7qlN5D6A6VHZ",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Extract Email Data').item.json.id }}",
+        "labelIds": "={{ $json.id }}"
+      },
+      "id": "0b68c5e6-5c8c-4cfc-bb84-a5f9f796e0b5",
+      "name": "Create New Label",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        2960,
+        220
+      ],
+      "webhookId": "9e401ad8-b89c-4015-a3cf-b1000ac51ae1",
+      "typeVersion": 2.1,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zRlr7qlN5D6A6VHZ",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-nano",
+          "cachedResultName": "gpt-4.1-nano"
+        },
+        "options": {}
+      },
+      "id": "eb6a0fa8-8a23-46e5-b6c3-e3731a75752c",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        1720,
+        440
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "IleT53idqzgq2A7w",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const excludedLabelIds = [\n  \"Label_5\",   // Newsletter\n  \"Label_21\",  // Inquiry\n  \"Label_11\",  // Invoice\n  \"Label_9\",   // Proposal\n  \"Label_52\",  // Action Required\n  \"Label_55\",  // Follow-up Reminder\n  \"Label_53\",  // Task\n  \"Label_44\",  // Personal\n  \"Label_54\",  // Urgent\n  \"Label_12\",  // Bank\n  \"Label_3\",   // Job Update\n  \"Label_42\",  // Spam / Junk\n  \"Label_7\",   // Social / Networking\n  \"Label_8\",   // Receipt\n  \"Label_2\",   // Event Invite\n  \"Label_10\",  // Subscription Renewal\n  \"Label_4\"    // System Notification\n];\n\n\nreturn items.filter(item => {\n  const labels = item.json.labelIds || [];\n  // Exclude if ANY excluded label is present\n  return !labels.some(label => excludedLabelIds.includes(label));\n});\n"
+      },
+      "id": "86c4d570-2634-4e5a-9a20-183eedaa7861",
+      "name": "Filter Emails Without Excluded Labels",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        520,
+        380
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is the email details:\nFrom: { $('Merge').item.json.headers.from }}\nSubject line: {{ $json.headers.subject }}\nEmail Body: \n{{ $json.text }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are my Personal Email Labeler.  \nWhen I feed you the subject and body of a new email, you must assign exactly one label—no extra text.\n\nAvailable labels:\n- Newsletter  \n- Inquiry  \n- Invoice  \n- Proposal  \n- Action Required  \n- Follow-up Reminder  \n- Task  \n- Personal  \n- Urgent  \n- Bank  \n- Job Update  \n- Spam / Junk  \n- Social / Networking  \n- Receipt  \n- Event Invite  \n- Subscription Renewal  \n- System Notification  \n\nLabel definitions:\n1. Newsletter  \n   • Subscription updates, promotions, digests.  \n   • No reply needed—just file away.  \n2. Inquiry  \n   • Sender asks a question or requests information.  \n   • Prioritize and suggest replying.  \n3. Invoice  \n   • Billing, receipts, payment requests.  \n   • Flag if payment is due.  \n4. Proposal  \n   • Business offers, contracts, collaboration pitches.  \n   • Flag for review; consider acknowledging receipt.  \n5. Action Required  \n   • Requests that demand you do something (book, confirm, complete).  \n   • Mark and suggest a reminder.  \n6. Follow-up Reminder  \n   • Emails reminding you of something pending or that you already acted on.  \n   • Suggest checking status or pinging again.  \n7. Task  \n   • Contains to-do items or project steps.  \n   • Extract tasks, prioritize by deadline.  \n8. Personal  \n   • From friends or family; non-work.  \n   • Keep accessible but low urgency unless marked urgent.  \n9. Urgent  \n   • Critical deadlines, emergencies, time-sensitive.  \n   • Bump to top of your inbox; reply ASAP.  \n10. Bank  \n    • Statements, alerts, transaction notices, fraud warnings from your bank.  \n    • Flag if action is needed (e.g., verify, transfer, dispute).  \n11. Job Update  \n    • Direct messages from recruiters/HR or alerts from job portals (LinkedIn, Naukri, etc.).  \n    • Flag as relevant opportunity; suggest acknowledging or bookmarking.  \n12. Spam / Junk  \n    • Unwanted bulk mail, phishing attempts, obvious ads.  \n    • Auto-archive or delete.  \n13. Social / Networking  \n    • Notifications from social sites (GitHub, Twitter, forums) not job-related.  \n    • File separately from Job Update.  \n14. Receipt  \n    • E-commerce order confirmations, tickets, one-off purchase receipts.  \n    • Archive after processing.  \n15. Event Invite  \n    • Calendar invitations or RSVPs (Google Meet, Zoom, Outlook).  \n    • Accept/decline or add to calendar.  \n16. Subscription Renewal  \n    • Reminders for software licenses, memberships, domain renewals.  \n    • Flag for manual renewal.  \n17. System Notification  \n    • Alerts from monitoring tools, CI/CD, cloud services, security scanners.  \n    • Triage or forward to team channel.\n\nRules:\n- Read subject + body.  \n- Choose the single best label.  \n- Output **only** that label."
+        }
+      },
+      "id": "959e4ca6-4f8b-4a63-a9d1-28a45a8a7adf",
+      "name": "AI-Powered Email Classification",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        1720,
+        280
+      ],
+      "typeVersion": 1.7
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Extract Email Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply New Label": {
+      "main": [
+        [
+          {
+            "node": "Create New Label",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Gmail - Single Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create New Label": {
+      "main": [
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Get All Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI-Powered Email Classification",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store AI Category": {
+      "main": [
+        [
+          {
+            "node": "Check if Label Exists",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "List All Gmail Labels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Email Data": {
+      "main": [
+        [
+          {
+            "node": "AI-Powered Email Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply Label to Email": {
+      "main": [
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Label Exists": {
+      "main": [
+        [
+          {
+            "node": "Apply New Label",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [
+          {
+            "node": "Apply Label to Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List All Gmail Labels": {
+      "main": [
+        [
+          {
+            "node": "Check if Label Exists",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Gmail - Single Message": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail - Get All Messages": {
+      "main": [
+        [
+          {
+            "node": "Filter Emails Without Excluded Labels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Emails Without Excluded Labels": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI-Powered Email Classification": {
+      "main": [
+        [
+          {
+            "node": "Store AI Category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "db988b76-a88d-4355-8d29-c44ec8c27f31",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "16ed17c9c2a3c2f2456fa33a1606b954271b5e6a768b8b2e1c807a5bb7e13121"
+  },
+  "id": "BetGOXi1gkSXkMPI",
+  "tags": []
+}
