@@ -1,0 +1,261 @@
+{
+  "name": "Shopify Sales Automation: Daily Reporting & Slack Alerts",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "getAll",
+        "options": {}
+      },
+      "name": "Shopify",
+      "type": "n8n-nodes-base.shopify",
+      "position": [
+        -1220,
+        -20
+      ],
+      "typeVersion": 1,
+      "id": "752d8e25-aac4-466d-a566-d8a624a52699",
+      "credentials": {
+        "shopifyApi": {
+          "id": null,
+          "name": "shopify_nodeqa"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "let totalOrders = items.length;\nlet ordersSum = 0;\n\nfor(let i=0; i < items.length; i++) {\n  ordersSum = ordersSum + parseFloat(items[i].json.orderPrice);\n}\nreturn [{json:{totalOrders, ordersSum}}]"
+      },
+      "name": "Function",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        -420,
+        -120
+      ],
+      "typeVersion": 1,
+      "id": "289be0e1-64bf-43db-b4e6-daeb2f4ece6d"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "append",
+        "sheetId": "1GVyV1yYwWZu510NTzVgi2RyesrsnuP3RxXmWbX1O7DQ",
+        "options": {}
+      },
+      "name": "Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        -220,
+        -20
+      ],
+      "typeVersion": 1,
+      "id": "59104f41-b660-4a6a-b00d-427ad42505e0",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": null,
+          "name": "google_sheets_oauth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "channel": "shopify",
+        "text": "=Hey team, this week we had {{$json[\"totalOrders\"]}} orders with a total value of € {{$json[\"ordersSum\"]}}.",
+        "otherOptions": {},
+        "attachments": []
+      },
+      "name": "Slack",
+      "type": "n8n-nodes-base.slack",
+      "position": [
+        -220,
+        -220
+      ],
+      "typeVersion": 1,
+      "id": "73104658-f357-492b-8eeb-798a82a83494",
+      "credentials": {
+        "slackApi": {
+          "id": null,
+          "name": "slack_nodeqa"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "value": "={{$json[\"created_at\"]}}",
+        "dataPropertyName": "order_date",
+        "options": {}
+      },
+      "name": "Date & Time",
+      "type": "n8n-nodes-base.dateTime",
+      "position": [
+        -1020,
+        -20
+      ],
+      "typeVersion": 1,
+      "id": "4210a799-104a-4efe-abe5-bf220eb2aed2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "dateTime": [
+            {
+              "value1": "={{$node[\"Date & Time\"].json[\"order_date\"]}}",
+              "value2": "2021-08-17T15:00:53.223Z"
+            }
+          ]
+        }
+      },
+      "name": "IF",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -820,
+        -20
+      ],
+      "typeVersion": 1,
+      "id": "0e3784b7-c65d-420e-8375-50f90f9ba8b5"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "number": [
+            {
+              "name": "orderPrice",
+              "value": "={{$json[\"total_price\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set price",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -620,
+        -120
+      ],
+      "typeVersion": 1,
+      "id": "311f2dff-3fb5-4f02-bf49-91dba11fc792"
+    },
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyWeek",
+              "hour": 10
+            }
+          ]
+        }
+      },
+      "name": "Run Daily Sales Check",
+      "type": "n8n-nodes-base.cron",
+      "position": [
+        -1420,
+        -20
+      ],
+      "typeVersion": 1,
+      "id": "09ba4f16-bb3a-4019-afaa-a149f4ef82e4"
+    },
+    {
+      "parameters": {},
+      "name": "// Ignore Orders Not Matching Filter",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        -620,
+        80
+      ],
+      "typeVersion": 1,
+      "id": "2cd7ee37-5b7c-4a13-b9da-7f0f98ae018a"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "IF": {
+      "main": [
+        [
+          {
+            "node": "Set price",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "// Ignore Orders Not Matching Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify": {
+      "main": [
+        [
+          {
+            "node": "Date & Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function": {
+      "main": [
+        [
+          {
+            "node": "Slack",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set price": {
+      "main": [
+        [
+          {
+            "node": "Function",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time": {
+      "main": [
+        [
+          {
+            "node": "IF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Daily Sales Check": {
+      "main": [
+        [
+          {
+            "node": "Shopify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a382e274-81c1-44b1-985a-7a4d6de1d679",
+  "meta": {
+    "instanceId": "16ed17c9c2a3c2f2456fa33a1606b954271b5e6a768b8b2e1c807a5bb7e13121"
+  },
+  "id": "mbNtZUos34Z40llE",
+  "tags": []
+}
