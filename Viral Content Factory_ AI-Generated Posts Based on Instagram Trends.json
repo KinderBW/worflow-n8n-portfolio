@@ -1,0 +1,1162 @@
+{
+  "name": "Viral Content Factory: AI-Generated Posts Based on Instagram Trends",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "0304efee-33b2-499e-bad1-9238c1fc2999",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.status_code }}",
+              "rightValue": "FINISHED"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e7b8ae29-675d-41a3-9c30-33b17f9ee021",
+      "name": "If media status is finished",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        4260,
+        1200
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "0304efee-33b2-499e-bad1-9238c1fc2999",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.status_code }}",
+              "rightValue": "PUBLISHED"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5d405594-f09c-4f90-8ecb-73a9ee255d71",
+      "name": "If media status is finished1",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        4900,
+        1200
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Params').item.json.telegram_chat_id }}",
+        "text": "Video upload edilmeden önce bir problem oldu",
+        "additionalFields": {}
+      },
+      "id": "9600b619-66be-4165-aea8-4b595fcd9dc4",
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        4460,
+        1340
+      ],
+      "typeVersion": 1.2,
+      "webhookId": "5673d858-76a0-4534-8d1c-0f8ee6d315e7",
+      "credentials": {
+        "telegramApi": {
+          "id": "VjILwDUOIjgw8Iul",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Params').item.json.telegram_chat_id }}",
+        "text": "Instagram Content is shared",
+        "additionalFields": {}
+      },
+      "id": "b4b5cf30-b9a3-403c-9779-6a096d7050bc",
+      "name": "Telegram1",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        5100,
+        1040
+      ],
+      "typeVersion": 1.2,
+      "webhookId": "2ca2cdc9-e6e7-4a0d-b082-c66171c55792",
+      "credentials": {
+        "telegramApi": {
+          "id": "VjILwDUOIjgw8Iul",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Params').item.json.telegram_chat_id }}",
+        "text": "There was a problem when execution a upload content to instagram",
+        "additionalFields": {}
+      },
+      "id": "c6be3973-eec7-4f9b-925f-287e2fe981ca",
+      "name": "Telegram2",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        5100,
+        1360
+      ],
+      "typeVersion": 1.2,
+      "webhookId": "d3546c85-d7d2-4713-8b3c-9e793b135a03",
+      "credentials": {
+        "telegramApi": {
+          "id": "VjILwDUOIjgw8Iul",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "c4f9e87c-4ec8-4ef6-8a39-9e976372a662",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        1940,
+        1160
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "5 13,19 * * *"
+            }
+          ]
+        }
+      },
+      "id": "cef8b748-adb0-4764-ab02-ae0bbc68da42",
+      "name": "Schedule Trigger1",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        100,
+        1240
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d18cdca7-d301-4c70-a4d0-8d6e7ecfc2d1",
+              "name": "telegram_chat_id",
+              "type": "string",
+              "value": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1ceaf31e-e7b0-42d5-bde3-2b20f4bfaec9",
+      "name": "Telegram Params",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        640,
+        1240
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1e380c14-e908-4eeb-90e0-957a422829d0",
+              "name": "instagram_business_account_id",
+              "type": "string",
+              "value": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "73dff300-407d-4aa8-b6d6-3bc59a0da0de",
+      "name": "Instagram params",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        460,
+        1240
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "48a33ec7-2b4f-496a-ad77-e4d5f1907ee4",
+              "name": "x-rapid-api-key",
+              "type": "string",
+              "value": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "47f6c88a-50ec-49a7-bc55-ec679700caaa",
+      "name": "Rapid Api params",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        820,
+        1240
+      ],
+      "notesInFlow": false,
+      "typeVersion": 3.4,
+      "notes": "test"
+    },
+    {
+      "parameters": {
+        "jsCode": "const filteredData = $input.first().json.data.items.filter(item=> !item.is_video)\nreturn filteredData.map((item)=>{\n  return {\n    id: item.id,\n    prompt: item.caption.text,\n    content_code: item.code,\n    thumbnail_url: item.thumbnail_url,\n    tag: $input.first().json.data.additional_data.name\n  }\n})                                                                    \n\n"
+      },
+      "id": "95a77c0f-1bc3-4ba2-b91f-7c5aac61c261",
+      "name": "filter the image content",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1360,
+        1320
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "url": "https://instagram-scraper-api2.p.rapidapi.com/v1/hashtag",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "hashtag",
+              "value": "isometric"
+            },
+            {
+              "name": "feed_type",
+              "value": "top"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "instagram-scraper-api2.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $json['x-rapid-api-key'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7c8dcc20-ac7e-40f4-ab86-8f2f7f8c4116",
+      "name": "get top trends on instagram #isometric",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1120,
+        1320
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {},
+      "id": "0c6d6197-7cb7-433d-9911-869533a08299",
+      "name": "merge the array content",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        1640,
+        1220
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "top_trends",
+          "cachedResultName": "top_trends"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "code",
+              "value": "={{$json.content_code}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a4d2d756-d24d-4b0d-9b5a-553b5acc2f2e",
+      "name": "Check Data on Database Is Exist",
+      "type": "n8n-nodes-base.postgres",
+      "position": [
+        2220,
+        1160
+      ],
+      "typeVersion": 2.5,
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "2OjQrTAYSOs45o4P",
+          "name": "Postgres account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "9dc20983-ae4d-40db-b969-7d43fa8b0c3e",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ !$json.isEmpty() }}",
+              "rightValue": "we"
+            },
+            {
+              "id": "0e1b9264-be56-4d0c-a83e-d9ca0b05b265",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "",
+              "rightValue": ""
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "3ccd44eb-a71b-4f1b-9966-e35a40343ce3",
+      "name": "If Data is Exist",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        2480,
+        1180
+      ],
+      "executeOnce": false,
+      "typeVersion": 2.2,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Params').item.json.telegram_chat_id}}",
+        "text": "There was a problem execution a postgresql content",
+        "additionalFields": {}
+      },
+      "id": "4dded399-0fae-4e90-aefd-f383c2a76aa6",
+      "name": "send error message to telegram",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        1940,
+        1380
+      ],
+      "typeVersion": 1.2,
+      "webhookId": "9262eb2f-aa2d-4f5e-a1c8-821b4c024c70",
+      "credentials": {
+        "telegramApi": {
+          "id": "VjILwDUOIjgw8Iul",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "top_trends",
+          "cachedResultName": "top_trends"
+        },
+        "columns": {
+          "value": {
+            "tag": "={{$('Loop Over Items').item.json.tag}}",
+            "code": "={{$('Loop Over Items').item.json.content_code}}",
+            "prompt": "={{$('Loop Over Items').item.json.prompt}}",
+            "isposted": false,
+            "thumbnail_url": "={{$('Loop Over Items').item.json.thumbnail_url}}"
+          },
+          "schema": [
+            {
+              "id": "id",
+              "type": "number",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "id",
+              "defaultMatch": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "prompt",
+              "type": "string",
+              "display": true,
+              "required": true,
+              "displayName": "prompt",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "isposted",
+              "type": "boolean",
+              "display": true,
+              "required": false,
+              "displayName": "isposted",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createdat",
+              "type": "dateTime",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "createdat",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updatedat",
+              "type": "dateTime",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "updatedat",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "deletedat",
+              "type": "dateTime",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "deletedat",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "code",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "code",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tag",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "tag",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "thumbnail_url",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "thumbnail_url",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "id"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "c489639d-194f-4d69-bd36-7b008f6976fa",
+      "name": "insert data on db",
+      "type": "n8n-nodes-base.postgres",
+      "position": [
+        2760,
+        1180
+      ],
+      "typeVersion": 2.5,
+      "credentials": {
+        "postgres": {
+          "id": "2OjQrTAYSOs45o4P",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "Create a clear and concise description of the object in the image, focusing on its physical and general features. Avoid detailed environmental aspects like background, lighting, or colors. Describe the shape, texture, size, and any unique characteristics of the object. Mention any notable features that make the object stand out, such as its surface details, materials, and design. The description should be focused on the object itself, not its surroundings.\n\nFor example, describe the following image:\n",
+        "imageUrls": "={{ $('Loop Over Items').item.json.thumbnail_url }}",
+        "options": {}
+      },
+      "id": "d6e0aa02-e975-4687-afa3-570713c950bf",
+      "name": "Analyze Image and give the content",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        2980,
+        1180
+      ],
+      "typeVersion": 1.8,
+      "credentials": {
+        "openAiApi": {
+          "id": "IleT53idqzgq2A7w",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v20.0",
+        "node": "={{ $('Instagram params').item.json.instagram_business_account_id }}",
+        "edge": "media",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "image_url",
+                "value": "={{ $json.output[0] }}"
+              },
+              {
+                "name": "caption",
+                "value": "={{ $('AI-Powered Trend Analysis and generation instagram data').item.json.message.content }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "fe957e39-9b7a-44a3-9603-7e2d6bd823e2",
+      "name": "Prepare data on Instagram",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "position": [
+        3820,
+        1200
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "PnhOBiXLoTG5BCqx",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "graphApiVersion": "v20.0",
+        "node": "={{ $json.id }}",
+        "options": {
+          "fields": {
+            "field": [
+              {
+                "name": "id"
+              },
+              {
+                "name": "status"
+              },
+              {
+                "name": "status_code"
+              }
+            ]
+          }
+        }
+      },
+      "id": "cb74a590-3bfa-463b-989c-88953973747a",
+      "name": "Check Status Of Media Before Uploaded",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "position": [
+        4020,
+        1200
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "PnhOBiXLoTG5BCqx",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v20.0",
+        "node": "={{ $('Instagram params').item.json.instagram_business_account_id }}",
+        "edge": "media_publish",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "creation_id",
+                "value": "={{ $json.id }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "ec8bbfc3-60ee-4398-91a2-f69502a00c5c",
+      "name": "Publish Media on Instagram",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "position": [
+        4460,
+        1060
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "PnhOBiXLoTG5BCqx",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "graphApiVersion": "v20.0",
+        "node": "={{ $('Check Status Of Media Before Uploaded').item.json.id }}",
+        "options": {
+          "fields": {
+            "field": [
+              {
+                "name": "id"
+              },
+              {
+                "name": "status"
+              },
+              {
+                "name": "status_code"
+              }
+            ]
+          }
+        }
+      },
+      "id": "289eb91a-be7b-47af-bad8-010735aef8dc",
+      "name": "Check status of post ",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "position": [
+        4680,
+        1200
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "PnhOBiXLoTG5BCqx",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const filteredData = $input.first().json.data.items.filter(item=> !item.is_video)\nreturn filteredData.map((item)=>{\n  return {\n    id: item.id,\n    prompt: item.caption.text,\n    content_code: item.code,\n    thumbnail_url: item.thumbnail_url,\n    tag: $input.first().json.data.additional_data.name\n  }\n})                                                                    \n\n"
+      },
+      "id": "551a9dc9-f379-4c05-a5dc-215fd1930c3c",
+      "name": "filter the image content-2",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1360,
+        1120
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1e380c14-e908-4eeb-90e0-957a422829d0",
+              "name": "replicate_token",
+              "type": "string",
+              "value": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "47f9192e-f487-4c91-ae0b-3f46f6f5d4e4",
+      "name": "Replicate params",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        280,
+        1240
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Replicate params').item.json.replicate_token}}"
+            },
+            {
+              "name": "Prefer",
+              "value": "wait"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "=json",
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "jsonBody": "={\n  \"input\": {\n    \"prompt\": \"A highly detailed 3D isometric model of {{$('Analyze Image and give the content').item.json.content   .replace(/\\\\n/g, ' ') \n.replace(/\\\\t/g, ' ') \n.replace(/\\s+/g, ' ')\n.trim(); }} rendered in a stylized miniature toy aesthetic. Materials: Matte plastic/painted metal/weathered stone texture with no self-shadowing. Lighting: - Completely shadowless rendering - Ultra bright and perfectly even illumination from all angles - Pure ambient lighting without directional shadows - Flat, consistent lighting across all surfaces - No ambient occlusion. Style specifications: - Clean, defined edges and surfaces - Slightly exaggerated proportions - Miniature/toy-like scale - Subtle wear and texturing - Rich color palette with muted tones - Isometric 3/4 view angle - Crisp details and micro-elements. Technical details: - 4K resolution - PBR materials without shadows - No depth of field - High-quality anti-aliasing - Perfect uniform lighting. Environment: Pure white background with zero shadows or gradients. Post-processing: High key lighting, maximum brightness, shadow removal.\",\n    \"output_format\": \"jpg\",\n    \"output_quality\": 100,\n    \"go_fast\":false\n  }\n}\n",
+        "options": {}
+      },
+      "id": "6f2b5180-26a7-4224-865c-cafc4e0e7c1c",
+      "name": "Generate image on flux",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        3600,
+        1200
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "url": "https://instagram-scraper-api2.p.rapidapi.com/v1/hashtag",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "hashtag",
+              "value": "blender3d"
+            },
+            {
+              "name": "feed_type",
+              "value": "top"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "instagram-scraper-api2.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $json['x-rapid-api-key'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fb0920ee-4805-4fb6-b57b-b6d2eeeec9c9",
+      "name": "Fetch Trends from Multiple Sources",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1120,
+        1120
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=\nSummarize the following content description into a short, engaging Instagram caption under 150 words. The caption should focus on the content of the image, not the app. Keep it appealing to social media users, and highlight the visual details of the image. Include hashtags relevant to 3D modeling and design, such as #Blender3D, #3DArt, #DigitalArt, #3DModeling, and #ArtCommunity. Ensure the tone is friendly and inviting.\n\n\nContent description to summarize:\n{{ $json.content }}\n\nMake sure to craft the caption around the content's features, such as the color contrast, reflective surface, and artistic nature of the image.\n\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ab160a5b-1187-41a6-a78e-dd26c682d7ce",
+      "name": "AI-Powered Trend Analysis and generation instagram data",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        3240,
+        1180
+      ],
+      "typeVersion": 1.8,
+      "credentials": {
+        "openAiApi": {
+          "id": "IleT53idqzgq2A7w",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Check Data on Database Is Exist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Params": {
+      "main": [
+        [
+          {
+            "node": "Rapid Api params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Data is Exist": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "insert data on db",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Instagram params": {
+      "main": [
+        [
+          {
+            "node": "Telegram Params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rapid Api params": {
+      "main": [
+        [
+          {
+            "node": "get top trends on instagram #isometric",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Trends from Multiple Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replicate params": {
+      "main": [
+        [
+          {
+            "node": "Instagram params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Replicate params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "insert data on db": {
+      "main": [
+        [
+          {
+            "node": "Analyze Image and give the content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check status of post ": {
+      "main": [
+        [
+          {
+            "node": "If media status is finished1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate image on flux": {
+      "main": [
+        [
+          {
+            "node": "Prepare data on Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "merge the array content": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "filter the image content": {
+      "main": [
+        [
+          {
+            "node": "merge the array content",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Prepare data on Instagram": {
+      "main": [
+        [
+          {
+            "node": "Check Status Of Media Before Uploaded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish Media on Instagram": {
+      "main": [
+        [
+          {
+            "node": "Check status of post ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "filter the image content-2": {
+      "main": [
+        [
+          {
+            "node": "merge the array content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If media status is finished": {
+      "main": [
+        [
+          {
+            "node": "Publish Media on Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If media status is finished1": {
+      "main": [
+        [
+          {
+            "node": "Telegram1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Data on Database Is Exist": {
+      "main": [
+        [
+          {
+            "node": "If Data is Exist",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "send error message to telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Image and give the content": {
+      "main": [
+        [
+          {
+            "node": "AI-Powered Trend Analysis and generation instagram data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Status Of Media Before Uploaded": {
+      "main": [
+        [
+          {
+            "node": "If media status is finished",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get top trends on instagram #isometric": {
+      "main": [
+        [
+          {
+            "node": "filter the image content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Trends from Multiple Sources": {
+      "main": [
+        [
+          {
+            "node": "filter the image content-2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI-Powered Trend Analysis and generation instagram data": {
+      "main": [
+        [
+          {
+            "node": "Generate image on flux",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "03d2f7f0-7523-4792-af3c-8320920bfccb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "16ed17c9c2a3c2f2456fa33a1606b954271b5e6a768b8b2e1c807a5bb7e13121"
+  },
+  "id": "cZeEUljXLKCRit6K",
+  "tags": []
+}
