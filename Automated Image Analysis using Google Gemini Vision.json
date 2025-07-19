@@ -1,0 +1,181 @@
+{
+  "name": "Automated Image Analysis using Google Gemini Vision",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -860,
+        240
+      ],
+      "id": "b39732c2-8a79-4ea3-84a9-20e353ede741",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://beige-goldfish-421515.hostingersite.com/luma/generated_image_2.png",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -580,
+        200
+      ],
+      "id": "cb08222d-65f8-46db-986d-e047a9d1b7c5",
+      "name": "Get Image Link"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/upload/v1beta/files?",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Goog-Upload-Command",
+              "value": "start, upload, finalize"
+            },
+            {
+              "value": "="
+            },
+            {
+              "value": "="
+            },
+            {}
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "=data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -300,
+        200
+      ],
+      "id": "2ffa524c-ef33-4ad9-b057-90372100771b",
+      "name": "Upload Image Gemini2",
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "5ynV3w9opBLPrXkn",
+          "name": "Query Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "candidates[0].content.parts[0].text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        200
+      ],
+      "id": "753d29c7-562f-4d84-9f05-04e5fce8a376",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"Analyze this image and describe what you see in detail.\"\n        },\n        {\n          \"file_data\": {\n            \"mime_type\": \"{{ $json.file.mimeType }}\",\n            \"file_uri\": \"{{ $json.file.uri }}\"\n          }\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        20,
+        200
+      ],
+      "id": "100feec7-3251-41d8-ae18-f0730db6da7f",
+      "name": "Gemini API",
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "5ynV3w9opBLPrXkn",
+          "name": "Query Auth account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get Image Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Image Link": {
+      "main": [
+        [
+          {
+            "node": "Upload Image Gemini2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Image Gemini2": {
+      "main": [
+        [
+          {
+            "node": "Gemini API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini API": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5bb1d695-33f5-48ab-a0de-b9a2bf9df1bf",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "16ed17c9c2a3c2f2456fa33a1606b954271b5e6a768b8b2e1c807a5bb7e13121"
+  },
+  "id": "j5RYPx55F7OHHEhA",
+  "tags": []
+}
