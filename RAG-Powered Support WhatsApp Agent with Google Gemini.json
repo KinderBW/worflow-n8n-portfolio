@@ -1,0 +1,687 @@
+{
+  "name": "RAG-Powered Support WhatsApp Agent with Google Gemini",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// cleanAnswer – run once per item\nlet txt = $('Generate AI-Powered Response').first().json.output || '';\n\n// 1. Remove bold / italic / strike markers\ntxt = txt.replace(/[*_~]+/g, '');\n\n// 2. Convert [Texto](https://url) → Texto https://url\ntxt = txt.replace(/\\[([^\\]]+)\\]\\((https?:\\/\\/[^\\s)]+)\\)/g, '$1 $2');\n\n// 3. Collapse 3+ blank lines\ntxt = txt.replace(/\\n{3,}/g, '\\n\\n').trim();\n\n// 4. Remove the unwanted source-reference preamble\ntxt = txt.replace(/^.*?based on the document you provided[,:]?\\s*/i, '');\n\nreturn [{ json: { answer: txt } }];\n"
+      },
+      "id": "378a6492-6924-4580-8c54-674e78b87f2f",
+      "name": "cleanAnswer",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2060,
+        420
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// within24h?  – run once per item\n// Meta (WhatsApp) timestamp arrives as seconds since epoch\nconst lastTs = Number($('On New WhatsApp Inquiry').first().json.messages[0].timestamp) * 1000;   // → ms\nconst withinWindow = Date.now() - lastTs < 24 * 60 * 60 * 1000;\n\nreturn [{ json: { withinWindow, answer: $json.answer, userId: $json.userId } }];"
+      },
+      "id": "1885a8ad-ace1-4516-9fb4-fc0004dfa5a8",
+      "name": "24-hour window check",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1660,
+        440
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "d33e218e-a49a-49ed-9c6b-55b9ea0b0dbb",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.withinWindow }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "423c6000-8ddc-42ae-8bbc-5d01e9c3e796",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1840,
+        440
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "641448739058783",
+        "recipientPhoneNumber": "={{ $('On New WhatsApp Inquiry').item.json.contacts[0].wa_id }}",
+        "template": "hello_world|en_US"
+      },
+      "id": "9906263e-3158-49c8-bd6f-8483f4888713",
+      "name": "Send Pre-approved Template Message to Reopen the Conversation",
+      "type": "n8n-nodes-base.whatsApp",
+      "position": [
+        2060,
+        640
+      ],
+      "webhookId": "ef6de86f-66df-4586-bd75-2056626d5474",
+      "typeVersion": 1,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "2jO1IVmC3SFBa7bC",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=641448739058783",
+        "recipientPhoneNumber": "={{ $('On New WhatsApp Inquiry').item.json.contacts[0].wa_id }}",
+        "textBody": "={{ $json.answer }}",
+        "additionalFields": {}
+      },
+      "id": "cf0e2c8b-7868-4b7f-ba04-48b0c4b15bf6",
+      "name": "Send AI Agent's Answer",
+      "type": "n8n-nodes-base.whatsApp",
+      "position": [
+        2280,
+        420
+      ],
+      "webhookId": "8da6eeda-31ec-448a-9d75-2d5dbc5f10f9",
+      "typeVersion": 1,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "2jO1IVmC3SFBa7bC",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-preview-04-17-thinking",
+        "options": {}
+      },
+      "id": "ec487331-6f8a-4de2-9476-2c5e0bff5655",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        840,
+        660
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "QlnehkYFFTFU9yWA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "7a72d709-b21c-494e-a419-e7c24734fb7f",
+      "name": "Date & Time",
+      "type": "n8n-nodes-base.dateTime",
+      "position": [
+        1260,
+        440
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "documentURL": "=1Uv1WYCcXNlp-jaeJ7-3MNxWYfPj-wcYnJv4_colXSvk"
+      },
+      "id": "49d2aabb-faad-41de-92fe-632f749c57f1",
+      "name": "company's knowledge",
+      "type": "n8n-nodes-base.googleDocs",
+      "position": [
+        580,
+        440
+      ],
+      "typeVersion": 2,
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "s94Y7AyGXU9tgboa",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('On New WhatsApp Inquiry').item.json.contacts[0].wa_id }}"
+      },
+      "id": "40497deb-5eda-4ae1-9082-effe739086e7",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        1000,
+        660
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1Ub8QIhGPOm1G4ylaM48iMAous1zvBO3YDl-38AKDuFw",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ub8QIhGPOm1G4ylaM48iMAous1zvBO3YDl-38AKDuFw/edit?usp=drivesdk",
+          "cachedResultName": "Chat Logs"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ub8QIhGPOm1G4ylaM48iMAous1zvBO3YDl-38AKDuFw/edit#gid=0",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "value": {
+            "User": "={{ $('On New WhatsApp Inquiry').item.json.messages[0].from }}",
+            "Message": "={{ $('On New WhatsApp Inquiry').item.json.messages[0].text.body }}",
+            "Response": "={{ $('Generate AI-Powered Response').item.json.output }}",
+            "Timestamp": "={{ $json.currentDate }}"
+          },
+          "schema": [
+            {
+              "id": "Timestamp",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Timestamp",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "User",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "User",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Message",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Response",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Response",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Column 5",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Column 5",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Column 6",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Column 6",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Column 7",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Column 7",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Column 8",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Column 8",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Column 9",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Column 9",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Column 10",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Column 10",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Column 11",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Column 11",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Column 12",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Column 12",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Column 13",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Column 13",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Column 14",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Column 14",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Column 15",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Column 15",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Column 16",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Column 16",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Column 17",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Column 17",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Column 18",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Column 18",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Column 19",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Column 19",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Column 20",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Column 20",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Column 21",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Column 21",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Column 22",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Column 22",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Column 23",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Column 23",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Column 24",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Column 24",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Column 25",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Column 25",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Column 26",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Column 26",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "Timestamp"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "a07aba8e-8838-40ee-9701-dba53db28bfd",
+      "name": "Append or update row in sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        1440,
+        440
+      ],
+      "typeVersion": 4.6,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "e38gHUcZJwyhot2K",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "id": "eba9c521-086d-41a8-b5c9-ff737a4c3df0",
+      "name": "On New WhatsApp Inquiry",
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "position": [
+        380,
+        440
+      ],
+      "webhookId": "6b645b70-61db-4d4d-af47-2f39295cf196",
+      "typeVersion": 1,
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "XYYdUijmsBWgOTRy",
+          "name": "WhatsApp OAuth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.finalPrompt }}\n\n\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are [Company]’s support assistant for Black Ball Sporting Club.\n• Do NOT include any preamble such as “Based on the document you provided” or “Okay, [Name].” Just jump straight to the answer.\n* don't ever start your response with\"based on the document you provided\" , or \"According to the document\", don't mention any documents at all , also don't mention today's date unless you asked\n"
+        }
+      },
+      "id": "1bdfd21c-8593-444c-96b1-ac402e0d8f04",
+      "name": "Generate AI-Powered Response",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "maxTries": 5,
+      "position": [
+        940,
+        440
+      ],
+      "retryOnFail": false,
+      "typeVersion": 1.7,
+      "alwaysOutputData": true,
+      "waitBetweenTries": null
+    },
+    {
+      "parameters": {
+        "instructions": "Write code to:\n• Get today’s date formatted “Month Day, Year”\n• Extract the Google Doc’s plain text by joining its body.content textRuns\n• Extract the WhatsApp message from messages[0].text.body\n• Build a field finalPrompt exactly as:\n\nvbnet\nCopy\nEdit\nToday's date is: [date]\n\n[doc text]\n\nUser's question:\n[body]\n• Return finalPrompt only.",
+        "codeGeneratedForPrompt": "Write code to:\n• Get today’s date formatted “Month Day, Year”\n• Extract the Google Doc’s plain text by joining its body.content textRuns\n• Extract the WhatsApp message from messages[0].text.body\n• Build a field finalPrompt exactly as:\n\nvbnet\nCopy\nEdit\nToday's date is: [date]\n\n[doc text]\n\nUser's question:\n[body]\n• Return finalPrompt only.",
+        "jsCode": "const googleDocs = $input.all().map((item) => item.json);\nconst whatsappMessages = $(\"On New WhatsApp Inquiry\")\n  .all()\n  .map((item) => item.json);\n\nconst date = new Date();\nconst formattedDate = `${date.getMonth() + 1} ${date.getDate()}, ${date.getFullYear()}`;\n\nconst docText = googleDocs[0].content.split(\"\\n\").join(\" \");\n\nconst body = whatsappMessages[0].messages[0].text.body;\n\nconst finalPrompt = `Today's date is: ${formattedDate}\\n\\n${docText}\\n\\nUser's question:\\n${body}`;\n\nreturn { finalPrompt };\n"
+      },
+      "id": "63fb074a-42e0-4f62-a4bd-d35a2ed38f55",
+      "name": "Build Context-Rich Prompt",
+      "type": "n8n-nodes-base.aiTransform",
+      "position": [
+        760,
+        440
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "cleanAnswer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Pre-approved Template Message to Reopen the Conversation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cleanAnswer": {
+      "main": [
+        [
+          {
+            "node": "Send AI Agent's Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Generate AI-Powered Response",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "company's knowledge": {
+      "main": [
+        [
+          {
+            "node": "Build Context-Rich Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "24-hour window check": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate AI-Powered Response",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "24-hour window check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On New WhatsApp Inquiry": {
+      "main": [
+        [
+          {
+            "node": "company's knowledge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate AI-Powered Response": {
+      "main": [
+        [
+          {
+            "node": "Date & Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Context-Rich Prompt": {
+      "main": [
+        [
+          {
+            "node": "Generate AI-Powered Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "bfb4797b-e538-4ae4-a4c2-4bb62585199e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "16ed17c9c2a3c2f2456fa33a1606b954271b5e6a768b8b2e1c807a5bb7e13121"
+  },
+  "id": "qslccmThsEhtoCEU",
+  "tags": []
+}
