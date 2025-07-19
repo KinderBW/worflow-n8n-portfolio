@@ -1,0 +1,401 @@
+{
+  "name": "AI-Generated Weekly Agenda Summary via Email",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtHour": 12
+            }
+          ]
+        }
+      },
+      "id": "07ebc729-05d4-4e53-8415-ebd6356eaccd",
+      "name": "weekly_schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        100,
+        1060
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": "c_4d9c2d4e139327143ee4a5bc4db531ffe074e98d21d1c28662b4a4d4da898866@group.calendar.google.com",
+          "cachedResultName": "n8n-personal-assistant-demo"
+        },
+        "returnAll": true,
+        "timeMin": "={{ $json['users-current-day-1-minute-before-midnight-iso'] }}",
+        "timeMax": "={{ $json['users-current-day-1-minute-before-midnight-plus-7-days-iso'] }}",
+        "options": {}
+      },
+      "id": "313998fb-b530-4512-94df-300fc60e71ec",
+      "name": "get_next_weeks_events",
+      "type": "n8n-nodes-base.googleCalendar",
+      "position": [
+        660,
+        1060
+      ],
+      "typeVersion": 1.3,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "mOjB70qXUjyS55WV",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-preview-05-20",
+        "options": {}
+      },
+      "id": "f8627656-d480-4133-9362-16fb754b97ee",
+      "name": "Google Gemini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        1260,
+        1280
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "QlnehkYFFTFU9yWA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "j",
+        "toEmail": "j",
+        "subject": "=Next Week Calendar Summary : {{ $now.plus({ days: 1 }).day }}-{{ $now.plus({ days: 7 }).toLocaleString(DateTime.DATE_MED) }}",
+        "html": "={{ $json['email-html'] }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "70a3e25d-1b60-4ab2-be1f-b6d432690202",
+      "name": "send_email",
+      "type": "n8n-nodes-base.emailSend",
+      "position": [
+        1800,
+        1060
+      ],
+      "webhookId": "7748b0f5-1a6a-42bf-b1c0-63051d6a62a2",
+      "typeVersion": 2.1,
+      "credentials": {
+        "smtp": {
+          "id": "d8i2t19tuAkIpxe0",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2fa6da62-0c1b-4abe-b1d1-45dab7c22ab0",
+              "name": "users-locale",
+              "type": "string",
+              "value": "en-AU"
+            },
+            {
+              "id": "e997127b-a7b1-4684-82b3-3e5d66be07fa",
+              "name": "users-timezone",
+              "type": "string",
+              "value": "Australia/Sydney"
+            },
+            {
+              "id": "082e8d8f-5b20-4fc0-a59e-6deb48cb1406",
+              "name": "users-name",
+              "type": "string",
+              "value": "Bob"
+            },
+            {
+              "id": "4a867353-6d0c-4bad-90f9-e739ff1da010",
+              "name": "users-home-city",
+              "type": "string",
+              "value": "Sydney"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f679ee4a-5dbd-41bb-b91f-7ba115a221ad",
+      "name": "locale",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        300,
+        1060
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  delete item.json.htmlLink\n  delete item.json.etag\n  delete item.json.iCalUID\n  delete item.json.start.timeZone\n  delete item.json.end.timeZone\n  delete item.json.kind\n  delete item.json.reminders\n  delete item.json.organizer\n  delete item.json.creator\n  delete item.json.created\n  delete item.json.updated\n  delete item.json.status\n  delete item.json.eventType\n  delete item.json.id\n}\n\nreturn $input.all();"
+      },
+      "id": "ad85b01e-be72-4b8b-9f3d-36a5f47bf901",
+      "name": "simplify_evens_json",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        880,
+        1060
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "eventdata",
+        "options": {}
+      },
+      "id": "c28ccb39-39ca-4462-bcbd-89f8466d8518",
+      "name": "aggregate_events",
+      "type": "n8n-nodes-base.aggregate",
+      "position": [
+        1080,
+        1060
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "954044f7-3c08-48c2-af9c-59a72690ad76",
+              "name": "users-current-date",
+              "type": "string",
+              "value": "={{\n  $now.setZone($('locale').item.json['users-timezone'] ?? 'UTC').setLocale($('locale').item.json['users-locale'] ?? 'en-US').toLocaleString(DateTime.DATE_FULL)\n}}"
+            },
+            {
+              "id": "2c3a0a1a-cc05-4b5d-b175-20732706aefb",
+              "name": "users-current-time",
+              "type": "string",
+              "value": "={{ $now.setZone($('locale').item.json['users-timezone'] ?? 'UTC').setLocale($('locale').item.json['users-locale'] ?? 'en-US').toLocaleString(DateTime.TIME_SIMPLE) }}"
+            },
+            {
+              "id": "764b3b1a-6a6e-4b92-8f41-ae49405bc72a",
+              "name": "users-date-time",
+              "type": "string",
+              "value": "={{ $now.setZone($('locale').item.json['users-timezone']) }}"
+            },
+            {
+              "id": "4c2851ef-175e-4f81-95af-5671171fdf16",
+              "name": "users-date-time-full",
+              "type": "string",
+              "value": "={{ $now.setZone($('locale').item.json['users-timezone'] ?? 'UTC').setLocale($('locale').item.json['users-locale'] ?? 'en-US').toLocaleString(DateTime.DATETIME_FULL) }}"
+            },
+            {
+              "id": "4ae2c38b-f93a-4b56-9078-d9675a12ec8b",
+              "name": "users-date-time-huge",
+              "type": "string",
+              "value": "={{ $now.setZone($('locale').item.json['users-timezone'] ?? 'UTC').setLocale($('locale').item.json['users-locale'] ?? 'en-US').toFormat('cccc, MMMM d, yyyy, h:mm a') }}"
+            },
+            {
+              "id": "1011c2bf-d311-424d-8537-1788597065d4",
+              "name": "users-current-date-plus-1",
+              "type": "string",
+              "value": "={{   $now.plus({ days: 1 }).setZone($('locale').item.json['users-timezone'] ?? 'UTC').setLocale($('locale').item.json['users-locale'] ?? 'en-US').toLocaleString(DateTime.DATE_FULL) }}"
+            },
+            {
+              "id": "343ec7d5-fcb5-454d-b947-4b0f2e94f930",
+              "name": "users-current-date-plus-7",
+              "type": "string",
+              "value": "={{   $now.plus({ days: 7 }).setZone($('locale').item.json['users-timezone'] ?? 'UTC').setLocale($('locale').item.json['users-locale'] ?? 'en-US').toLocaleString(DateTime.DATE_FULL) }}"
+            },
+            {
+              "id": "ce0de19d-9cb1-4918-ade5-47f22f35f8e8",
+              "name": "users-current-day-1-minute-before-midnight",
+              "type": "string",
+              "value": "={{\n  $now.setZone($('locale').item.json['users-timezone'] ?? 'UTC')\n      .endOf('day')\n      .setLocale($('locale').item.json['users-locale'] ?? 'en-US')\n      .toLocaleString(DateTime.DATETIME_FULL)\n}}"
+            },
+            {
+              "id": "800dff91-469d-4a2b-acb0-a0b79d0b9341",
+              "name": "users-current-day-1-minute-before-midnight-plus-7-days",
+              "type": "string",
+              "value": "={{   $now.setZone($('locale').item.json['users-timezone'] ?? 'UTC')       .plus({ days: 7 })       .endOf('day')       .setLocale($('locale').item.json['users-locale'] ?? 'en-US')       .toLocaleString(DateTime.DATETIME_FULL) }}"
+            },
+            {
+              "id": "d04c43fe-1f6d-4e7e-b82f-70cebb7484a6",
+              "name": "users-current-day-1-minute-before-midnight-iso",
+              "type": "string",
+              "value": "={{\n  $now.setZone($('locale').item.json['users-timezone'] ?? 'UTC')\n      .endOf('day')\n      .toISO()\n}}"
+            },
+            {
+              "id": "5aee9416-0ad6-43b9-936f-edce6a292cce",
+              "name": "users-current-day-1-minute-before-midnight-plus-7-days-iso",
+              "type": "string",
+              "value": "={{   $now.setZone($('locale').item.json['users-timezone'] ?? 'UTC')       .plus({ days: 7 })       .endOf('day')       .toISO() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "24b0255f-d3ab-41f8-b10d-5d72c0de8387",
+      "name": "date_time",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        480,
+        1060
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "mode": "markdownToHtml",
+        "markdown": "={{ $json.output }}",
+        "destinationKey": "email-html",
+        "options": {
+          "emoji": true,
+          "simpleLineBreaks": true
+        }
+      },
+      "id": "41261ed2-c0e9-40b8-8053-349ef8bbeb63",
+      "name": "markdown_to_html",
+      "type": "n8n-nodes-base.markdown",
+      "position": [
+        1600,
+        1060
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.eventdata }}",
+        "options": {
+          "systemMessage": "=You have been given a JSON array of Google Calendar events for the upcoming week (Monday to Sunday). Today is Sunday, {{ $('locale').item.json['users-current-date'] ? $('locale').item.json['users-current-date'] : $now.setZone($('locale').item.json['users-timezone'] ?? 'Australia/Sydney').setLocale($('locale').item.json['users-locale'] ?? 'en-AU').toLocaleString({ weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) }}.\nEach event object in the array has 'summary', 'start.dateTime', 'end.dateTime', and 'description'. Your designated timezone is '{{ $('locale').item.json['users-timezone'] }}' and locale '{{ $('locale').item.json['users-locale'] }}'.\n\nThe users name is: {{ $('locale').item.json['users-name'] }}\nThe user is located in: {{ $('locale').item.json['users-home-city'] }}\n\nYour task is to create a well-formatted weekly schedule summary for an email.\n\n1.  **Greeting**: Start with a friendly greeting, for example: \"Here's your schedule for the upcoming week:\"\n\n2.  **Daily Schedule**:\n    *   Group events by day (e.g., Monday, June 9, 2025; Tuesday, June 10, 2025). Determine the correct dates for the upcoming week (Monday to Sunday) based on today's date.\n    *   For each day of the upcoming week, list its events chronologically.\n    *   Format each event as: `HH:MM AM/PM - HH:MM AM/PM: Event Summary`. For example: `09:30 AM - 10:30 AM: Team Meeting`.\n    *   Parse the `start.dateTime` and `end.dateTime` (which are ISO strings with timezone offsets like `+10:00`) and display them correctly for the '{{ $('locale').item.json['users-timezone'] }}' timezone.\n    *   If a day has no events, state \"No events scheduled for this day.\"\n\n3.  **Priority Events**:\n    *   Review the 'summary' and 'description' fields for keywords such as \"important\", \"urgent\", \"deadline\", \"meeting\", \"critical\", \"prepare\", or similar terms that indicate significance.\n    *   Mark these priority events by prefixing the event line with \"IMPORTANT: \". For example: `IMPORTANT: 02:00 PM - 03:00 PM: Project Deadline Review`.\n    *   If the 'description' provides actionable context for a priority event (e.g., \"Preparation needed: review X document\"), you can briefly mention this context after the event summary.\n\n4.  **Weekly Insight**:\n    *   Conclude with 1-2 sentences offering a helpful insight, observation, or piece of advice related to the week's schedule. Examples:\n        *   \"Thursday looks like your busiest day, so you might want to plan accordingly.\"\n        *   \"Remember to allocate some time to prepare for the client presentation on Wednesday.\"\n        *   \"This week seems to have a good balance of meetings and free time.\"\n\n5.  **Input Data Structure Reminder**: The calendar events are provided as a JSON array. You need to process this entire array.\n\nPlease generate only the text content suitable for the body of an email. Do not include any preamble (like \"Okay, here is the summary...\") or sign-off beyond the requested content."
+        }
+      },
+      "id": "d3b88a10-aeef-4dd0-a019-35c4d4eea3b7",
+      "name": "Generate AI-Powered Summary",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        1260,
+        1060
+      ],
+      "typeVersion": 2
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "locale": {
+      "main": [
+        [
+          {
+            "node": "date_time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "date_time": {
+      "main": [
+        [
+          {
+            "node": "get_next_weeks_events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate AI-Powered Summary",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "weekly_schedule": {
+      "main": [
+        [
+          {
+            "node": "locale",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "aggregate_events": {
+      "main": [
+        [
+          {
+            "node": "Generate AI-Powered Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "markdown_to_html": {
+      "main": [
+        [
+          {
+            "node": "send_email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "simplify_evens_json": {
+      "main": [
+        [
+          {
+            "node": "aggregate_events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_next_weeks_events": {
+      "main": [
+        [
+          {
+            "node": "simplify_evens_json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate AI-Powered Summary": {
+      "main": [
+        [
+          {
+            "node": "markdown_to_html",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a2b478fa-7732-4c91-9ba5-87804e962ee6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "16ed17c9c2a3c2f2456fa33a1606b954271b5e6a768b8b2e1c807a5bb7e13121"
+  },
+  "id": "GYpJjucMcHw92kPi",
+  "tags": []
+}
