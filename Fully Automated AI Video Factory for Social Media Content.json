@@ -1,0 +1,1426 @@
+{
+  "name": "Fully Automated AI Video Factory for Social Media Content",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "246123e9-f70d-4e3f-b5f5-301c58c73f5d",
+      "name": "When clicking ‘Test workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        0,
+        120
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "resource": "all",
+        "additionalFields": {}
+      },
+      "id": "78a521ed-7759-4929-ab7e-59ef389a21ea",
+      "name": "Hacker News",
+      "type": "n8n-nodes-base.hackerNews",
+      "position": [
+        180,
+        120
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "f115ccf2-de60-4fad-8b95-07ec1a282ec7",
+      "name": "OpenAI Chat Model3",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        700,
+        380
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": {
+          "id": "IleT53idqzgq2A7w",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "grab the article for the ai agent to use",
+        "url": "={{ $json.url }}"
+      },
+      "id": "8cfd644d-3bc1-4a6f-8eae-ff249d417c82",
+      "name": "HTTP Request1",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "position": [
+        900,
+        400
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"summary\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n\t\t\"related\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n        \"image urls\": {\n\t\t\t\"type\": \"string\"\n        }\n\t}\n}"
+      },
+      "id": "57f6d71b-a01f-40ad-b738-21dcb724b068",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        1060,
+        400
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "=",
+        "additionalFields": {
+          "grantRead": true,
+          "parentFolderKey": "="
+        }
+      },
+      "id": "15b2cc5d-fd15-4e8b-99ab-3ff40e662c05",
+      "name": "Upload to Minio",
+      "type": "n8n-nodes-base.s3",
+      "position": [
+        2080,
+        1020
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "s3": {
+          "id": "UyvVcpXFgkuKVmmg",
+          "name": "S3 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ec8013d5-84b5-43c8-abcb-6986ef15939d",
+              "name": "property_name",
+              "type": "string",
+              "value": "={{ $json.message.content['Article Title'] }}"
+            },
+            {
+              "id": "4d91c4fc-12a2-4fe2-a58e-02284314e1de",
+              "name": "property_text",
+              "type": "string",
+              "value": "={{ $json.message.content['Article Blurb'] }}"
+            },
+            {
+              "id": "cad2b795-8b71-415f-a100-700d9ec62bbd",
+              "name": "property_image_url",
+              "type": "string",
+              "value": "={{ $('If Topic').item.json.output['image urls'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2d275acd-cba9-46b0-862c-447299bf0359",
+      "name": "News1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2140,
+        120
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://cloud.leonardo.ai/api/rest/v1/prompt/improve",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prompt\": \"{{ $('Article Prep').item.json.message.content['Image Prompt 1'] }}\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "5e812c22-d5bb-4810-b86a-a778ba641c08",
+      "name": "Leo - Improve Prompt",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1440,
+        360
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "6ulnR9tsMgCQKSJg",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://cloud.leonardo.ai/api/rest/v1/generations/{{ $json.body.sdGenerationJob.generationId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "b92241c2-8d5e-4b44-8179-f2097f5408ab",
+      "name": "Leo - Get imageId",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2020,
+        360
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "6ulnR9tsMgCQKSJg",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.dev.runwayml.com/v1/image_to_video",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Runway-Version",
+              "value": "2024-11-06"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "promptImage",
+              "value": "={{ $json.body.generations_by_pk.generated_images[0].url }}"
+            },
+            {
+              "name": "promptText",
+              "value": "string"
+            },
+            {
+              "name": "model",
+              "value": "gen3a_turbo"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4e397da7-9063-4ed9-9362-09a90af64b61",
+      "name": "Runway - Create Video",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2240,
+        360
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "6ulnR9tsMgCQKSJg",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.dev.runwayml.com/v1/tasks/{{ $json.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Runway-Version",
+              "value": "2024-11-06"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1f7ad2ec-a454-41b6-bb61-6db0ad0ab75f",
+      "name": "Runway - Get Video",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1440,
+        600
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "6ulnR9tsMgCQKSJg",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "minutes"
+      },
+      "id": "f1b3816a-48da-417f-a65a-739d7ca0469c",
+      "name": "Wait2",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        2420,
+        360
+      ],
+      "webhookId": "ddca5833-a40b-404a-9140-686cd4fa26cb",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "56219de5-244d-4b7f-a511-f3061572cf93",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.output.related }}",
+              "rightValue": "yes"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c51c0200-70ab-4f56-9556-77774ea6097b",
+      "name": "If Topic",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1200,
+        140
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "url": "={{ $('AI Content & Topic Analysis').first().json.output['image urls'] }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "f6e75752-bf29-489e-97c5-108505184a36",
+      "name": "Get Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1600,
+        120
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "56c8f20d-d9d9-4be7-ac2a-38df6ffdd722",
+              "name": "model",
+              "type": "string",
+              "value": "6b645e3a-d64f-4341-a6d8-7a3690fbf042"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "71c4e159-92c7-4487-96d2-efb6b282780b",
+      "name": "Prompt Settings1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2340,
+        120
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://cloud.leonardo.ai/api/rest/v1/generations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"alchemy\": true,\n  \"width\": 1024,\n  \"height\": 768,\n  \"modelId\": \"6b645e3a-d64f-4341-a6d8-7a3690fbf042\",\n  \"num_images\": 1,\n  \"presetStyle\": \"MONOCHROME\",\n  \"prompt\": \"{{ $json.body.promptGeneration.prompt }}; Use the rule of thirds, leading lines, & balance. DO NOT INCLUDE ANY WORDS OR LABELS.\",\n  \"guidance_scale\": 7,\n  \"highResolution\": true,\n  \"promptMagic\": false,\n  \"promptMagicStrength\": 0.5,\n  \"promptMagicVersion\": \"v3\",\n  \"public\": false,\n  \"ultra\": false,\n  \"photoReal\": false,\n  \"negative_prompt\": \"\"\n} ",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "27fb6a5c-6786-4201-a251-4c02c29c6beb",
+      "name": "Leo - Generate Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1660,
+        360
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "6ulnR9tsMgCQKSJg",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "id": "4f64d71c-6103-40c6-869a-1441c481b95a",
+      "name": "Wait1",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        1840,
+        360
+      ],
+      "webhookId": "256c3814-6a52-4eb1-969a-30f9f3b8e04e",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "maxItems": 50,
+        "keep": "lastItems"
+      },
+      "id": "b38a1372-d5c5-473c-bf0d-b0a5d60dc8f4",
+      "name": "Limit",
+      "type": "n8n-nodes-base.limit",
+      "position": [
+        360,
+        120
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "imageUrls": "={{ $json.output['image urls'] }}",
+        "options": {
+          "detail": "auto"
+        }
+      },
+      "id": "da461cbe-0c8a-4b09-af3d-d9f6611418d0",
+      "name": "Image Analysis",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        1400,
+        120
+      ],
+      "typeVersion": 1.6,
+      "credentials": {
+        "openAiApi": {
+          "id": "IleT53idqzgq2A7w",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "unit": "minutes"
+      },
+      "id": "69082dab-b884-49cd-a219-c064713b9483",
+      "name": "Wait3",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        2080,
+        800
+      ],
+      "webhookId": "6e4a0b8d-6c31-4a98-8ec3-2509aa2087e8",
+      "typeVersion": 1.1,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://cloud.leonardo.ai/api/rest/v1/prompt/improve",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prompt\": \"{{ $('Article Prep').item.json.message.content['Image Prompt 2'] }}\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "23563000-0df4-47e3-826a-4088938aff53",
+      "name": "Leo - Improve Prompt2",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1660,
+        600
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "6ulnR9tsMgCQKSJg",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "minutes"
+      },
+      "id": "0929fb74-d798-4563-865b-737e27460f5e",
+      "name": "Wait4",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        1440,
+        800
+      ],
+      "webhookId": "89b31515-b403-4644-a2c1-970e5e774008",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "id": "f6c64979-e8ce-4502-8987-a1c62c8f632b",
+      "name": "Wait6",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        2080,
+        600
+      ],
+      "webhookId": "2efb873f-bcbd-41d9-99da-b2b57ef5ad93",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://cloud.leonardo.ai/api/rest/v1/generations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"alchemy\": true,\n  \"width\": 1024,\n  \"height\": 768,\n  \"modelId\": \"6b645e3a-d64f-4341-a6d8-7a3690fbf042\",\n  \"num_images\": 1,\n  \"presetStyle\": \"MONOCHROME\",\n  \"prompt\": \"{{ $json.body.promptGeneration.prompt }}; Use the rule of thirds, leading lines, & balance. DO NOT INCLUDE ANY WORDS OR LABELS.\",\n  \"guidance_scale\": 7,\n  \"highResolution\": true,\n  \"promptMagic\": false,\n  \"promptMagicStrength\": 0.5,\n  \"promptMagicVersion\": \"v3\",\n  \"public\": false,\n  \"ultra\": false,\n  \"photoReal\": false,\n  \"negative_prompt\": \"\"\n} ",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "cbef1f59-3fad-4d6e-afa6-2ecb2c8c2e46",
+      "name": "Leo - Generate Image2",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1880,
+        600
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "6ulnR9tsMgCQKSJg",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://cloud.leonardo.ai/api/rest/v1/generations/{{ $json.body.sdGenerationJob.generationId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "ad3ace95-2877-46e4-b5db-08825ed0cdda",
+      "name": "Leo - Get imageId2",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2260,
+        600
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "6ulnR9tsMgCQKSJg",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.dev.runwayml.com/v1/image_to_video",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Runway-Version",
+              "value": "2024-11-06"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "promptImage",
+              "value": "={{ $json.body.generations_by_pk.generated_images[0].url }}"
+            },
+            {
+              "name": "promptText",
+              "value": "string"
+            },
+            {
+              "name": "model",
+              "value": "gen3a_turbo"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b84be440-5b3f-4b1e-81a5-187202f8e002",
+      "name": "Runway - Create Video2",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2460,
+        600
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "6ulnR9tsMgCQKSJg",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.dev.runwayml.com/v1/tasks/{{ $json.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Runway-Version",
+              "value": "2024-11-06"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "edc45531-450a-43c0-b4d5-49ae39c53d9a",
+      "name": "Runway - Get Video2",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1660,
+        800
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "6ulnR9tsMgCQKSJg",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.creatomate.com/v1/renders",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"max_width\": 480,\n  \"template_id\": \"enterTemplateID\",\n  \"modifications\": {\n    \"Scenes.elements\": [\n      {\n        \"name\": \"Intro Comp\",\n        \"type\": \"composition\",\n        \"track\": 1,\n        \"elements\": [\n          {\n            \"name\": \"Image-1\",\n            \"type\": \"image\",\n            \"source\": \"{{ $('Leo - Get imageId').item.json.body.generations_by_pk.generated_images[0].url }}\"\n          },\n          {\n            \"name\": \"Subtitles-1\",\n            \"type\": \"text\",\n            \"transcript_source\": \"Voiceover-1\",\n            \"width\": \"86.66%\",\n            \"height\": \"37.71%\",\n            \"x_alignment\": \"50%\",\n            \"y_alignment\": \"50%\",\n            \"fill_color\": \"#ffffff\",\n            \"stroke_color\": \"#333333\",\n            \"stroke_width\": \"1.05 vmin\",\n            \"font_family\": \"Inter\",\n            \"font_weight\": \"700\",\n            \"font_size\": \"8 vmin\",\n            \"background_color\": \"rgba(255,255,255,0.2)\",\n            \"background_x_padding\": \"26%\",\n            \"background_y_padding\": \"7%\",\n            \"background_border_radius\": \"28%\",\n            \"transcript_effect\": \"highlight\",\n            \"transcript_color\": \"#ff5900\"\n          },\n          {\n            \"name\": \"Voiceover-1\",\n            \"type\": \"audio\",\n            \"source\": \"{{ $('News1').item.json.property_name }}\",\n            \"provider\": \"openai model=tts-1 voice=onyx\"\n          }\n        ]\n      },\n      {\n        \"name\": \"Auto Scene Comp\",\n        \"type\": \"composition\",\n        \"track\": 1,\n        \"elements\": [\n          {\n            \"name\": \"Video-2\",\n            \"type\": \"video\",\n            \"source\": \"{{ $('Runway - Get Video').first().json.output[0] }}\",\n            \"loop\": true\n          },\n          {\n            \"name\": \"Subtitles-2\",\n            \"type\": \"text\",\n            \"transcript_source\": \"Voiceover-2\",\n            \"y\": \"78.2173%\",\n            \"width\": \"86.66%\",\n            \"height\": \"37.71%\",\n            \"x_alignment\": \"50%\",\n            \"y_alignment\": \"50%\",\n            \"fill_color\": \"#ffffff\",\n            \"stroke_color\": \"#333333\",\n            \"stroke_width\": \"1.05 vmin\",\n            \"font_family\": \"Inter\",\n            \"font_weight\": \"700\",\n            \"font_size\": \"8 vmin\",\n            \"background_color\": \"rgba(255,255,255,0.2)\",\n            \"background_x_padding\": \"26%\",\n            \"background_y_padding\": \"7%\",\n            \"background_border_radius\": \"28%\",\n            \"transcript_effect\": \"highlight\",\n            \"transcript_color\": \"#ff5900\"\n          },\n          {\n            \"name\": \"Voiceover-2\",\n            \"type\": \"audio\",\n            \"source\": \"{{ $('Article Prep').item.json.message.content['Summary Blurb 1'] }}\",\n            \"provider\": \"openai model=tts-1 voice=onyx\"\n          }\n        ]\n      },\n      {\n        \"name\": \"Auto Scene Comp\",\n        \"type\": \"composition\",\n        \"track\": 1,\n        \"elements\": [\n          {\n            \"name\": \"Video-3\",\n            \"type\": \"video\",\n            \"source\": \"{{ $('Runway - Get Video2').first().json.output[0] }}\",\n            \"loop\": true\n          },\n          {\n            \"name\": \"Subtitles-3\",\n            \"type\": \"text\",\n            \"transcript_source\": \"Voiceover-3\",\n            \"y\": \"78.2173%\",\n            \"width\": \"86.66%\",\n            \"height\": \"37.71%\",\n            \"x_alignment\": \"50%\",\n            \"y_alignment\": \"50%\",\n            \"fill_color\": \"#ffffff\",\n            \"stroke_color\": \"#333333\",\n            \"stroke_width\": \"1.05 vmin\",\n            \"font_family\": \"Inter\",\n            \"font_weight\": \"700\",\n            \"font_size\": \"8 vmin\",\n            \"background_color\": \"rgba(255,89,0,0.5)\",\n            \"background_x_padding\": \"26%\",\n            \"background_y_padding\": \"7%\",\n            \"background_border_radius\": \"28%\",\n            \"transcript_effect\": \"highlight\",\n            \"transcript_color\": \"#ff0040\"\n          },\n          {\n            \"name\": \"Voiceover-3\",\n            \"type\": \"audio\",\n            \"source\": \"{{ $('Article Prep').item.json.message.content['Summary Blurb 2'] }}\",\n            \"provider\": \"openai model=tts-1 voice=onyx\"\n          }\n        ]\n      }\n    ]\n  }\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "e2dd4c7d-1f8c-489b-bdb9-882d292512e1",
+      "name": "Cre - Generate Video1",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1880,
+        800
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "6ulnR9tsMgCQKSJg",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.creatomate.com/v1/renders/{{ $json.body.body[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "88537cca-a293-4776-9b43-52c5699ea10e",
+      "name": "Cre - Get Video",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2260,
+        800
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "6ulnR9tsMgCQKSJg",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=prepare the following summary for a newsletter where the article will be 1 of several presented in the newsletter:\n\n{{ $('AI Content & Topic Analysis').first().json.output.summary }}\n\nMake sure the Article Blurb lenght is less than 15 words.\n\nThen, create 2 Summary Blurbs, making sure each is less than 15 words.\n\nAlso create 2 image prompts that is less than 15 words long for each Summary Blurb"
+            },
+            {
+              "content": "Output in markdown format\nArticle Title\nArticle Blurb\nSummary Blurb 1\nSummary Blurb 2\nArticle Image\nImage Prompt 1\nImage Prompt 2",
+              "role": "system"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "id": "9716fb1b-fea8-4873-9c18-e0e6f65a657f",
+      "name": "Article Prep",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        1800,
+        120
+      ],
+      "typeVersion": 1.6,
+      "credentials": {
+        "openAiApi": {
+          "id": "IleT53idqzgq2A7w",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "jb"
+      },
+      "id": "b5b08fb2-723d-43b5-aea3-f28f03a67482",
+      "name": "Upload a file",
+      "type": "n8n-nodes-base.dropbox",
+      "position": [
+        1440,
+        1020
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "dropboxApi": {
+          "id": "CVj6NCfW2e7KxCVn",
+          "name": "Dropbox account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "1GfVjdcnfHg4rBcLgzuxdzukXNSGNmbjb",
+          "mode": "list",
+          "cachedResultName": "1_31.jpeg",
+          "cachedResultUrl": "https://drive.google.com/file/d/1GfVjdcnfHg4rBcLgzuxdzukXNSGNmbjb/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "id": "69dfd550-2fca-4fc1-9590-397a1bca8831",
+      "name": "Update file",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        1660,
+        1020
+      ],
+      "typeVersion": 3,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ECGkkHlhgS2TWF67",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "parentId": "k",
+        "fileContent": "n"
+      },
+      "id": "173d5414-6cfd-495d-b19b-ad602297e404",
+      "name": "Upload a file1",
+      "type": "n8n-nodes-base.microsoftOneDrive",
+      "position": [
+        1880,
+        1020
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "zpHWm2MSETrqUSOs",
+          "name": "Microsoft Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": ",",
+        "additionalFields": {}
+      },
+      "id": "f7169f82-d425-4c21-85f5-756f316cc448",
+      "name": "Create Tweet",
+      "type": "n8n-nodes-base.twitter",
+      "position": [
+        1660,
+        1240
+      ],
+      "typeVersion": 2,
+      "credentials": {
+        "twitterOAuth2Api": {
+          "id": "3wK580NjdJiB1j35",
+          "name": "X account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "person": "k\n",
+        "text": "n",
+        "additionalFields": {}
+      },
+      "id": "9ac0e033-9de6-4b06-ae2a-68619e45e035",
+      "name": "Create a post",
+      "type": "n8n-nodes-base.linkedIn",
+      "position": [
+        1880,
+        1240
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "uh84i1tfzpHUiQPQ",
+          "name": "LinkedIn account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "44e9484d-842f-435a-bda4-c74e7440018e",
+      "name": "Start Processing Each News Story",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        560,
+        120
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Can you tell me if the article at {{ $json.url }} is related to automation or ai? \n\nthen, create a 250 word summary of the article\n\nAlso, list any image url's related to the article content from the url. Limit to 1 image url.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a helpful assistant in summarizing and identifying articles related to automation and ai. \nOutput the results as:\nsummary: \nrelated: yes or no\nimage urls: "
+        }
+      },
+      "id": "1f38b896-dfa8-497a-92bb-f6155f9628da",
+      "name": "AI Content & Topic Analysis",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        820,
+        120
+      ],
+      "typeVersion": 1.7,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": ",",
+        "options": {}
+      },
+      "id": "d99ee113-87e4-42e3-9214-52eb29edfe2d",
+      "name": "Publish to YouTube",
+      "type": "n8n-nodes-base.youTube",
+      "position": [
+        1440,
+        1240
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "NslgufFoOHBR2aGs",
+          "name": "YouTube account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": ",",
+        "options": {}
+      },
+      "id": "3fef2c75-0a20-4eee-88f6-20c1b4e35ced",
+      "name": "Publish to Instagram",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2080,
+        1240
+      ],
+      "typeVersion": 4.2
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Start Processing Each News Story",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "News1": {
+      "main": [
+        [
+          {
+            "node": "Prompt Settings1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Leo - Get imageId",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Runway - Get Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait3": {
+      "main": [
+        [
+          {
+            "node": "Cre - Get Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait4": {
+      "main": [
+        [
+          {
+            "node": "Runway - Get Video2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait6": {
+      "main": [
+        [
+          {
+            "node": "Leo - Get imageId2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Topic": {
+      "main": [
+        [
+          {
+            "node": "Image Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Start Processing Each News Story",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Image": {
+      "main": [
+        [
+          {
+            "node": "Article Prep",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hacker News": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Article Prep": {
+      "main": [
+        [
+          {
+            "node": "News1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Content & Topic Analysis",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image Analysis": {
+      "main": [
+        [
+          {
+            "node": "Get Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prompt Settings1": {
+      "main": [
+        [
+          {
+            "node": "Leo - Improve Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leo - Get imageId": {
+      "main": [
+        [
+          {
+            "node": "Runway - Create Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leo - Get imageId2": {
+      "main": [
+        [
+          {
+            "node": "Runway - Create Video2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Content & Topic Analysis",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Runway - Get Video": {
+      "main": [
+        [
+          {
+            "node": "Leo - Improve Prompt2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Runway - Get Video2": {
+      "main": [
+        [
+          {
+            "node": "Cre - Generate Video1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leo - Generate Image": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leo - Improve Prompt": {
+      "main": [
+        [
+          {
+            "node": "Leo - Generate Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cre - Generate Video1": {
+      "main": [
+        [
+          {
+            "node": "Wait3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leo - Generate Image2": {
+      "main": [
+        [
+          {
+            "node": "Wait6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leo - Improve Prompt2": {
+      "main": [
+        [
+          {
+            "node": "Leo - Generate Image2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Runway - Create Video": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Runway - Create Video2": {
+      "main": [
+        [
+          {
+            "node": "Wait4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Content & Topic Analysis",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Hacker News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a file": {
+      "main": [
+        [
+          {
+            "node": "Update file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update file": {
+      "main": [
+        [
+          {
+            "node": "Upload a file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a file1": {
+      "main": [
+        [
+          {
+            "node": "Upload to Minio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Tweet": {
+      "main": [
+        [
+          {
+            "node": "Create a post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a post": {
+      "main": [
+        [
+          {
+            "node": "Publish to Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Processing Each News Story": {
+      "main": [
+        [],
+        [
+          {
+            "node": "AI Content & Topic Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Content & Topic Analysis": {
+      "main": [
+        [
+          {
+            "node": "If Topic",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Start Processing Each News Story",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish to YouTube": {
+      "main": [
+        [
+          {
+            "node": "Create Tweet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ad8e2b90-2ef5-4be2-a15c-079c39c97e9e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "16ed17c9c2a3c2f2456fa33a1606b954271b5e6a768b8b2e1c807a5bb7e13121"
+  },
+  "id": "58zHAPBjLcM5oHh6",
+  "tags": []
+}
