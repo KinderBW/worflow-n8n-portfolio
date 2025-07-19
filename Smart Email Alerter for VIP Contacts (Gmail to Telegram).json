@@ -1,0 +1,141 @@
+{
+  "name": "Smart Email Alerter for VIP Contacts (Gmail to Telegram)",
+  "nodes": [
+    {
+      "parameters": {
+        "table": "clients",
+        "additionalFields": {}
+      },
+      "name": "Check if sender is a client",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        -500,
+        100
+      ],
+      "id": "5471a995-bdd3-4091-bfa4-095ea122f0c1",
+      "credentials": {
+        "postgres": {
+          "id": "2OjQrTAYSOs45o4P",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.length}}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "name": "Is a client?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -260,
+        100
+      ],
+      "id": "e45ee3a5-df63-4a9e-ad81-d616752bbf07"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=Nouvel email reçu d'un client !\n\n**De :**",
+        "additionalFields": {}
+      },
+      "name": "Send Telegram Notification",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "06139740-cb0d-49dc-bb2a-d9ae0db8bb1d",
+      "webhookId": "a9b6ee6c-0e4a-44b7-b5b3-eadb8d3be87d",
+      "credentials": {
+        "telegramApi": {
+          "id": "VjILwDUOIjgw8Iul",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -780,
+        100
+      ],
+      "id": "1f3e3170-a169-4f11-83a6-7ada7d6d6250",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zRlr7qlN5D6A6VHZ",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Check if sender is a client": {
+      "main": [
+        [
+          {
+            "node": "Is a client?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is a client?": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check if sender is a client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "60fd9deb-8e3b-48e1-add4-64452b357ed9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "16ed17c9c2a3c2f2456fa33a1606b954271b5e6a768b8b2e1c807a5bb7e13121"
+  },
+  "id": "8i8HHR7plBJQ9ZHy",
+  "tags": []
+}
